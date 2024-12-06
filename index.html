@@ -117,10 +117,26 @@
             </section>
 
             <section id="voice-section">
-                <h2>Voice Recording</h2>
-                <div class="recording-controls">
-                    <button id="record">Record</button>
-                    <button id="play-recording">Play</button>
+                <div class="section-header">
+                    <h2>Voice Recording</h2>
+                </div>
+                <div class="voice-controls">
+                    <button id="record-btn" class="control-btn">
+                        <span class="record-icon"></span>
+                        Record
+                    </button>
+                    <button id="play-btn" class="control-btn" disabled>
+                        <span class="play-icon"></span>
+                        Play
+                    </button>
+                    <button id="loop-btn" class="control-btn special-btn" disabled>
+                        <span class="loop-icon"></span>
+                        Loop (Deep Entrainment)
+                    </button>
+                </div>
+                <div class="recording-status">
+                    <span id="recording-time">00:00</span>
+                    <div class="waveform-container" id="waveform"></div>
                 </div>
                 <div class="volume-control">
                     <label>Voice Volume</label>
@@ -192,6 +208,8 @@
 
     <script src="audio-tracks.js"></script>
     <script src="binaural.js"></script>
+    <script src="voice-enhancer.js"></script>
+    <script src="voice-recording.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
