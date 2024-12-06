@@ -320,6 +320,105 @@ select, input[type="text"], textarea {
     color: white;
 }
 
+/* Voice Recording Section Styles */
+.voice-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.control-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: none;
+    background: #2c2c2c;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.control-btn:not(:disabled):hover {
+    background: #3c3c3c;
+    transform: translateY(-1px);
+}
+
+.special-btn {
+    background: linear-gradient(45deg, #4a4a8f, #5d5da8);
+    padding: 12px 20px;
+    font-weight: 500;
+    box-shadow: 0 2px 10px rgba(74, 74, 143, 0.2);
+}
+
+.special-btn:not(:disabled):hover {
+    background: linear-gradient(45deg, #5d5da8, #6e6ec0);
+    box-shadow: 0 4px 15px rgba(74, 74, 143, 0.3);
+}
+
+.record-icon, .play-icon, .loop-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    position: relative;
+}
+
+.record-icon {
+    background: #ff4444;
+    border-radius: 50%;
+}
+
+.play-icon {
+    border-style: solid;
+    border-width: 8px 0 8px 12px;
+    border-color: transparent transparent transparent #fff;
+}
+
+.loop-icon {
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-right-color: transparent;
+    transform: rotate(45deg);
+}
+
+.loop-icon::after {
+    content: '';
+    position: absolute;
+    right: -2px;
+    top: 50%;
+    border-style: solid;
+    border-width: 4px;
+    border-color: transparent transparent transparent #fff;
+    transform: translateY(-50%);
+}
+
+.recording-status {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#recording-time {
+    font-family: monospace;
+    font-size: 1.2em;
+    color: #ff4444;
+}
+
+.waveform-container {
+    width: 100%;
+    height: 100px;
+    background: #1c1c1c;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
 /* Modal Styles */
 .modal {
     display: none;
