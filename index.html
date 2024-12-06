@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Subconscious Reprogramming</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <header>
+            <h1>Deep Subconscious Reprogramming</h1>
+        </header>
+
+        <main>
+            <section id="music-section">
+                <h2>Music Selection</h2>
+                <select id="track-selector">
+                    <option value="">Select a Track</option>
+                </select>
+                <div class="controls">
+                    <button id="play-pause">Play</button>
+                    <button id="loop">Loop</button>
+                    <div class="volume-control">
+                        <label>Music Volume</label>
+                        <input type="range" id="music-volume" min="0" max="100" value="60">
+                        <span class="volume-value">60%</span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="binaural-section">
+                <h2>Binaural Beats</h2>
+                <div class="frequency-selector">
+                    <button class="freq-btn" data-freq="delta">Delta (0.5-4.0 Hz)</button>
+                    <button class="freq-btn" data-freq="theta">Theta (4.5-7.5 Hz)</button>
+                    <button class="freq-btn" data-freq="alpha">Alpha (8.4-12 Hz)</button>
+                </div>
+                <div class="volume-control">
+                    <label>Binaural Volume</label>
+                    <input type="range" id="binaural-volume" min="0" max="100" value="30">
+                    <span class="volume-value">30%</span>
+                </div>
+                <div id="frequency-display">Current Frequency: <span>10 Hz</span></div>
+            </section>
+
+            <section id="voice-section">
+                <h2>Voice Recording</h2>
+                <div class="recording-controls">
+                    <button id="record">Record</button>
+                    <button id="play-recording">Play</button>
+                </div>
+                <div class="volume-control">
+                    <label>Voice Volume</label>
+                    <input type="range" id="voice-volume" min="0" max="100" value="100">
+                    <span class="volume-value">100%</span>
+                </div>
+            </section>
+
+            <section id="ai-script-section">
+                <h2>AI Script Assistant</h2>
+                <input type="text" id="intention-input" placeholder="Enter your intention or goal...">
+                <button id="generate-script">Generate Affirmations</button>
+                <textarea id="affirmations-area" readonly></textarea>
+            </section>
+
+            <section id="session-controls">
+                <div class="timer-control">
+                    <label>Session Duration</label>
+                    <input type="range" id="session-timer" min="5" max="60" value="20">
+                    <span id="timer-display">20:00</span>
+                </div>
+                <div class="preset-controls">
+                    <button class="preset-btn" data-preset="meditation">Meditation</button>
+                    <button class="preset-btn" data-preset="sleep">Deep Sleep</button>
+                    <button class="preset-btn" data-preset="affirmation">Affirmation</button>
+                </div>
+                <div id="breathing-guide"></div>
+                <div id="progress-bar"></div>
+            </section>
+        </main>
+    </div>
+    <script src="audio-tracks.js"></script>
+    <script src="binaural.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
