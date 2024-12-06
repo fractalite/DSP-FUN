@@ -10,6 +10,9 @@
     <div class="container">
         <header>
             <h1>Deep Subconscious Reprogramming</h1>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                🌙
+            </button>
         </header>
 
         <main>
@@ -239,6 +242,25 @@
     <script src="config.js"></script>
     <script src="ai-integration.js"></script>
     <script src="affirmation-system.js"></script>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const root = document.documentElement;
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        root.dataset.theme = savedTheme;
+        themeToggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = root.dataset.theme || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            root.dataset.theme = newTheme;
+            localStorage.setItem('theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+        });
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
