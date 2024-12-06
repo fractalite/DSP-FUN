@@ -3,16 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deep Subconscious Reprogramming</title>
+    <title>deepr.love</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="dark-mode">
     <div class="container">
         <header>
-            <h1>Deep Subconscious Reprogramming</h1>
-            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
-                🌙
-            </button>
+            <img src="assets/logo.png" alt="deepr.love Logo" class="logo">
+            <h1>deepr.love</h1>
+            <button id="help-flow" class="help-icon" aria-label="Help" data-modal="flow-help-modal">?</button>
+            <div class="header-right">
+                <span class="better-with">better with 🎧</span>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                    🌙
+                </button>
+            </div>
         </header>
 
         <main>
@@ -41,7 +47,7 @@
             <section id="binaural-section">
                 <div class="section-header">
                     <h2>Binaural Beat Generator</h2>
-                    <button id="help-icon" class="help-icon" aria-label="Help">?</button>
+                    <button id="help-icon" class="help-icon" aria-label="Help" data-modal="help-modal">?</button>
                 </div>
                 <div class="frequency-layers">
                     <div class="layer-group">
@@ -151,7 +157,7 @@
             <section id="ai-script-section">
                 <div class="section-header">
                     <h2>Affirmation Generator</h2>
-                    <button id="help-affirmations" class="help-icon" aria-label="Help" onclick="document.getElementById('ai-help-modal').style.display='block'">?</button>
+                    <button id="help-affirmations" class="help-icon" aria-label="Help" data-modal="ai-help-modal">?</button>
                 </div>
                 <div class="generator-controls">
                     <select id="category-select">
@@ -171,27 +177,54 @@
                 </div>
             </section>
 
-            <section id="session-controls">
-                <div class="timer-control">
-                    <label>Session Duration</label>
-                    <input type="range" id="session-timer" min="5" max="60" value="20">
-                    <span id="timer-display">20:00</span>
+            <section id="session-section">
+                <div class="section-header">
+                    <h2>Session Manager</h2>
                 </div>
-                <div class="preset-controls">
-                    <button class="preset-btn" data-preset="meditation">Meditation</button>
-                    <button class="preset-btn" data-preset="sleep">Deep Sleep</button>
-                    <button class="preset-btn" data-preset="affirmation">Affirmation</button>
+                <div class="session-controls">
+                    <button id="start-session" class="primary-btn">Start Session</button>
+                    <button id="stop-session" class="primary-btn" disabled>Stop Session</button>
+                    <div id="session-status">Ready to Start</div>
                 </div>
-                <div id="breathing-guide"></div>
-                <div id="progress-bar"></div>
+                <div class="session-stats" id="session-stats">
+                    <!-- Stats will be populated by JavaScript -->
+                </div>
+                <div class="session-history" id="session-history">
+                    <!-- History visualization will be populated by JavaScript -->
+                </div>
             </section>
         </main>
     </div>
 
     <!-- Help Modals -->
+    <div id="flow-help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('flow-help-modal').style.display='none'">&times;</span>
+            <h2>How to Use deepr.love</h2>
+            <div class="flow-steps">
+                <div class="step">
+                    <h3>1. Choose Your Music</h3>
+                    <p>Select a song that resonates with you. Each track comes in two versions (A & B) with different binaural frequencies.</p>
+                </div>
+                <div class="step">
+                    <h3>2. Set Your Intention</h3>
+                    <p>Based on your goals, choose a binaural frequency that aligns with your desired state of consciousness.</p>
+                </div>
+                <div class="step">
+                    <h3>3. Prepare Your Space</h3>
+                    <p>Find a quiet place where you can lie down comfortably. Using headphones is essential for the binaural experience.</p>
+                </div>
+                <div class="step">
+                    <h3>4. Adjust & Begin</h3>
+                    <p>Set your volume to a comfortable level. Close your eyes, relax, and let the journey begin.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="help-modal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
+            <span class="close" onclick="document.getElementById('help-modal').style.display='none'">&times;</span>
             <h2>Brainwave Frequencies Guide</h2>
             
             <h3>Delta Range (0.5–4 Hz)</h3>
@@ -239,9 +272,11 @@
     <script src="binaural.js"></script>
     <script src="voice-enhancer.js"></script>
     <script src="voice-recording.js"></script>
+    <script src="env-config.js"></script>
     <script src="config.js"></script>
     <script src="ai-integration.js"></script>
     <script src="affirmation-system.js"></script>
+    <script src="sessions.js"></script>
     <script>
         // Theme toggle functionality
         const themeToggle = document.getElementById('theme-toggle');
@@ -259,6 +294,40 @@
             root.dataset.theme = newTheme;
             localStorage.setItem('theme', newTheme);
             themeToggle.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+        });
+
+        // Modal functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get all modals
+            const modals = document.querySelectorAll('.modal');
+            const helpButtons = document.querySelectorAll('.help-icon');
+            const closeButtons = document.querySelectorAll('.close');
+
+            // Add click event to all help buttons
+            helpButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modalId = button.getAttribute('data-modal');
+                    const modal = document.getElementById(modalId);
+                    if (modal) modal.style.display = 'block';
+                });
+            });
+
+            // Add click event to all close buttons
+            closeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = button.closest('.modal');
+                    if (modal) modal.style.display = 'none';
+                });
+            });
+
+            // Close modal when clicking outside
+            window.addEventListener('click', (event) => {
+                modals.forEach(modal => {
+                    if (event.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
         });
     </script>
     <script src="app.js"></script>
