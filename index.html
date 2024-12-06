@@ -14,10 +14,9 @@
             <h1>deepr.love</h1>
             <button id="help-flow" class="help-icon" aria-label="Help" data-modal="flow-help-modal">?</button>
             <div class="header-right">
-                <span class="better-with">better with 🎧</span>
-                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
-                    🌙
-                </button>
+                <div class="better-with-headphones">🎧 better with headphones</div>
+                <button id="stop-all" class="stop-button">⏹️ Stop All</button>
+                <button id="theme-toggle" class="theme-toggle">🌙</button>
             </div>
         </header>
 
@@ -125,35 +124,6 @@
                 </div>
             </section>
 
-            <section id="voice-section">
-                <div class="section-header">
-                    <h2>Voice Recording</h2>
-                </div>
-                <div class="voice-controls">
-                    <button id="record-btn" class="control-btn">
-                        <span class="record-icon"></span>
-                        Record
-                    </button>
-                    <button id="play-btn" class="control-btn" disabled>
-                        <span class="play-icon"></span>
-                        Play
-                    </button>
-                    <button id="loop-btn" class="control-btn special-btn" disabled>
-                        <span class="loop-icon"></span>
-                        Loop (Deep Entrainment)
-                    </button>
-                </div>
-                <div class="recording-status">
-                    <span id="recording-time">00:00</span>
-                    <div class="waveform-container" id="waveform"></div>
-                </div>
-                <div class="volume-control">
-                    <label>Voice Volume</label>
-                    <input type="range" id="voice-volume" min="0" max="100" value="100">
-                    <span class="volume-value">100%</span>
-                </div>
-            </section>
-
             <section id="ai-script-section">
                 <div class="section-header">
                     <h2>Affirmation Generator</h2>
@@ -174,6 +144,34 @@
                     <button id="view-favorites" class="secondary-btn">
                         <span class="icon">⭐</span> View Favorites
                     </button>
+                </div>
+            </section>
+
+            <section id="voice-section">
+                <div class="section-header">
+                    <h2>Voice Recording</h2>
+                </div>
+                <div class="voice-controls">
+                    <button id="record-btn" class="control-btn">
+                        <span class="record-icon"></span>
+                        Record
+                    </button>
+                    <button id="play-btn" class="control-btn" disabled>
+                        <span class="play-icon"></span>
+                        Play
+                    </button>
+                    <button id="loop-btn" class="control-btn special-btn" disabled>
+                        <span class="loop-icon"></span>
+                        Loop (Deep Entrainment)
+                    </button>
+                </div>
+                <div class="recording-status">
+                    <span id="recording-time">00:00</span>
+                </div>
+                <div class="volume-control">
+                    <label>Voice Volume</label>
+                    <input type="range" id="voice-volume" min="0" max="100" value="100">
+                    <span class="volume-value">100%</span>
                 </div>
             </section>
 
@@ -201,24 +199,31 @@
         <div class="modal-content">
             <span class="close" onclick="document.getElementById('flow-help-modal').style.display='none'">&times;</span>
             <h2>How to Use deepr.love</h2>
-            <div class="flow-steps">
-                <div class="step">
-                    <h3>1. Choose Your Music</h3>
-                    <p>Select a song that resonates with you. Each track comes in two versions (A & B) with different binaural frequencies.</p>
-                </div>
-                <div class="step">
-                    <h3>2. Set Your Intention</h3>
-                    <p>Based on your goals, choose a binaural frequency that aligns with your desired state of consciousness.</p>
-                </div>
-                <div class="step">
-                    <h3>3. Prepare Your Space</h3>
-                    <p>Find a quiet place where you can lie down comfortably. Using headphones is essential for the binaural experience.</p>
-                </div>
-                <div class="step">
-                    <h3>4. Adjust & Begin</h3>
-                    <p>Set your volume to a comfortable level. Close your eyes, relax, and let the journey begin.</p>
-                </div>
-            </div>
+            <ol>
+                <li>Choose background music (optional) and adjust volume</li>
+                <li>Select binaural frequencies or a therapeutic journey:
+                    <ul>
+                        <li>Single frequencies: Click any frequency button to activate</li>
+                        <li>Therapeutic journeys: Choose a preset journey for guided frequency transitions</li>
+                    </ul>
+                </li>
+                <li>Generate personalized affirmations:
+                    <ul>
+                        <li>Select a category and enter your intention</li>
+                        <li>Click generate to create AI-powered affirmations</li>
+                        <li>Save your favorites for future sessions</li>
+                    </ul>
+                </li>
+                <li>Record your voice (optional):
+                    <ul>
+                        <li>Record your affirmations or intentions</li>
+                        <li>Play back while listening to binaural beats</li>
+                        <li>Loop recording for deeper entrainment</li>
+                    </ul>
+                </li>
+                <li>Save your session settings for future use</li>
+            </ol>
+            <p class="note">🎧 For best results, use headphones and find a quiet space</p>
         </div>
     </div>
 
@@ -265,6 +270,14 @@
             <p>This feature harnesses the power of Llama 3.3 AI to create personalized affirmations tailored to your needs.</p>
             <p>As we're using a shared community API, please allow time between requests to ensure everyone can benefit from this resource.</p>
             <p>Don't worry if the AI is temporarily unavailable - you'll still receive quality affirmations from our carefully curated templates.</p>
+        </div>
+    </div>
+
+    <div id="favorites-modal" class="modal">
+        <div class="modal-content">
+            <h2>Favorite Affirmations</h2>
+            <div id="favorites-list"></div>
+            <button class="close-modal">Close</button>
         </div>
     </div>
 
