@@ -5,6 +5,9 @@
     --accent-color: #6b46c1;
     --hover-color: #805ad5;
     --border-radius: 8px;
+    --section-bg: #2d2d2d;
+    --input-bg: #1a1a1a;
+    --border-color: #6b46c1;
 }
 
 * {
@@ -500,6 +503,213 @@ select, input[type="text"], textarea {
 
 .close:hover {
     color: #333;
+}
+
+/* Favorites Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background-color: var(--section-bg);
+    margin: 5% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 800px;
+    border-radius: 10px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.close-modal {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: var(--accent-color);
+}
+
+.favorite-item {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.favorite-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.favorite-date {
+    color: #888;
+    font-size: 0.9em;
+}
+
+.intention {
+    color: var(--accent-color);
+    margin-bottom: 10px;
+    font-style: italic;
+}
+
+.affirmation-text {
+    margin: 15px 0;
+    line-height: 1.6;
+}
+
+.favorite-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.load-favorite,
+.delete-favorite {
+    padding: 5px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.load-favorite {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+}
+
+.delete-favorite {
+    background: transparent;
+    color: #ff4444;
+    border: 1px solid #ff4444;
+}
+
+.load-favorite:hover {
+    background: var(--hover-color);
+}
+
+.delete-favorite:hover {
+    background: #ff4444;
+    color: white;
+}
+
+.no-favorites {
+    text-align: center;
+    color: #888;
+    padding: 20px;
+}
+
+/* AI Script Section Styles */
+#ai-script-section {
+    background: var(--section-bg);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.generator-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+#category-select {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+}
+
+#intention-input {
+    flex: 2;
+    min-width: 250px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+}
+
+#generate-script {
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    background: var(--accent-color);
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#generate-script:hover {
+    background: var(--hover-color);
+}
+
+#affirmations-area {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    resize: vertical;
+    font-size: 1.1em;
+    line-height: 1.5;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.secondary-btn {
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background: var(--section-bg);
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.secondary-btn:hover {
+    background: var(--hover-color);
+    color: white;
+}
+
+.icon {
+    font-size: 1.2em;
 }
 
 @media (max-width: 768px) {
