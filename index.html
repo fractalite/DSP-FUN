@@ -146,10 +146,26 @@
             </section>
 
             <section id="ai-script-section">
-                <h2>AI Script Assistant</h2>
-                <input type="text" id="intention-input" placeholder="Enter your intention or goal...">
-                <button id="generate-script">Generate Affirmations</button>
-                <textarea id="affirmations-area" readonly></textarea>
+                <div class="section-header">
+                    <h2>Affirmation Generator</h2>
+                    <button id="help-affirmations" class="help-icon" aria-label="Help">?</button>
+                </div>
+                <div class="generator-controls">
+                    <select id="category-select">
+                        <option value="">Select a Category</option>
+                    </select>
+                    <input type="text" id="intention-input" placeholder="Enter your intention or goal...">
+                    <button id="generate-script" class="primary-btn">Generate Affirmations</button>
+                </div>
+                <textarea id="affirmations-area" readonly placeholder="Your personalized affirmations will appear here..."></textarea>
+                <div class="action-buttons">
+                    <button id="save-affirmation" class="secondary-btn">
+                        <span class="icon">💾</span> Save to Favorites
+                    </button>
+                    <button id="view-favorites" class="secondary-btn">
+                        <span class="icon">⭐</span> View Favorites
+                    </button>
+                </div>
             </section>
 
             <section id="session-controls">
@@ -210,6 +226,9 @@
     <script src="binaural.js"></script>
     <script src="voice-enhancer.js"></script>
     <script src="voice-recording.js"></script>
+    <script src="config.js"></script>
+    <script src="ai-integration.js"></script>
+    <script src="affirmation-system.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
