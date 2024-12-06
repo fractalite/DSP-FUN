@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize components
-    const binauralGenerator = new BinauralGenerator();
     let audioPlayer = new Audio();
     let mediaRecorder = null;
     let audioChunks = [];
@@ -57,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     binauralVolume.addEventListener('input', (e) => {
-        binauralGenerator.setVolume(e.target.value / 100);
+        window.binauralGenerator.setVolume(e.target.value / 100);
         updateVolumeDisplay(e.target);
     });
 
@@ -110,23 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
         audioPlayer.loop = !audioPlayer.loop;
         loopBtn.style.backgroundColor = audioPlayer.loop ? 'var(--hover-color)' : 'var(--accent-color)';
     });
-
-    // Frequency controls
-    document.querySelectorAll('.freq-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const freq = btn.dataset.freq;
-            document.querySelectorAll('.freq-btn').forEach(b => 
-                b.style.backgroundColor = 'var(--accent-color)');
-            btn.style.backgroundColor = 'var(--hover-color)';
-            binauralGenerator.setFrequencyRange(freq);
-            updateFrequencyDisplay();
-        });
-    });
-
-    function updateFrequencyDisplay() {
-        const display = document.querySelector('#frequency-display span');
-        display.textContent = `${binauralGenerator.getCurrentFrequency()} Hz`;
-    }
 
     // Voice recording
     const recordBtn = document.getElementById('record');
@@ -200,9 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "I deserve to [goal] and I accept this truth"
         ];
 
-        return templates.map(template => {
-            return template.replace('[goal]', intention.toLowerCase());
-        });
+        return templates.map(template => template.replace('[goal]', intention));
     }
 
     // Volume Presets
@@ -214,76 +194,73 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function applyVolumePreset(preset) {
-        switch(preset) {
-            case 'meditation':
-                musicVolume.value = 60;
-                binauralVolume.value = 30;
-                voiceVolume.value = 100;
-                break;
-            case 'sleep':
-                musicVolume.value = 40;
-                binauralVolume.value = 50;
-                voiceVolume.value = 0;
-                break;
-            case 'affirmation':
-                musicVolume.value = 40;
-                binauralVolume.value = 30;
-                voiceVolume.value = 100;
-                break;
-        }
+        const presets = {
+            balanced: { music: 50, binaural: 5, voice: 50 },
+            musicFocus: { music: 70, binaural: 5, voice: 30 },
+            meditationFocus: { music: 30, binaural: 5, voice: 70 }
+        };
 
-        // Update all volume displays and actual volumes
-        [musicVolume, binauralVolume, voiceVolume].forEach(slider => {
-            updateVolumeDisplay(slider);
-            slider.dispatchEvent(new Event('input'));
-        });
+        if (presets[preset]) {
+            const settings = presets[preset];
+            
+            musicVolume.value = settings.music;
+            binauralVolume.value = settings.binaural;
+            voiceVolume.value = settings.voice;
+
+            audioPlayer.volume = settings.music / 100;
+            window.binauralGenerator.setVolume(settings.binaural / 100);
+            if (recordedAudio) {
+                recordedAudio.volume = settings.voice / 100;
+            }
+
+            // Update displays
+            document.querySelectorAll('input[type="range"]').forEach(updateVolumeDisplay);
+        }
     }
 
     // Session Timer
     const sessionTimerSlider = document.getElementById('session-timer');
     const timerDisplay = document.getElementById('timer-display');
     const progressBar = document.getElementById('progress-bar');
-    let sessionDuration = 20 * 60; // Default 20 minutes in seconds
-    let timeRemaining = sessionDuration;
-    let isSessionActive = false;
+
+    let sessionStartTime = null;
+    let sessionDuration = parseInt(sessionTimerSlider.value) * 60; // Convert to seconds
 
     sessionTimerSlider.addEventListener('input', () => {
-        sessionDuration = sessionTimerSlider.value * 60;
-        timeRemaining = sessionDuration;
+        sessionDuration = parseInt(sessionTimerSlider.value) * 60;
         updateTimerDisplay();
     });
 
     function updateTimerDisplay() {
-        const minutes = Math.floor(timeRemaining / 60);
-        const seconds = timeRemaining % 60;
-        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        
-        const progress = ((sessionDuration - timeRemaining) / sessionDuration) * 100;
-        progressBar.style.width = `${progress}%`;
+        const minutes = Math.floor(sessionDuration / 60);
+        timerDisplay.textContent = `${minutes} minutes`;
     }
 
     function startSession() {
-        if (isSessionActive) return;
-        
-        isSessionActive = true;
-        binauralGenerator.start();
-        
-        sessionTimer = setInterval(() => {
-            if (timeRemaining > 0) {
-                timeRemaining--;
-                updateTimerDisplay();
-            } else {
-                endSession();
-            }
-        }, 1000);
+        if (!sessionStartTime) {
+            sessionStartTime = Date.now();
+            sessionTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+                const remaining = Math.max(0, sessionDuration - elapsed);
+                const progress = (elapsed / sessionDuration) * 100;
+                
+                progressBar.style.width = `${progress}%`;
+                
+                if (remaining === 0) {
+                    endSession();
+                    audioPlayer.pause();
+                }
+            }, 1000);
+        }
     }
 
     function endSession() {
-        clearInterval(sessionTimer);
-        isSessionActive = false;
-        binauralGenerator.stop();
-        timeRemaining = sessionDuration;
-        updateTimerDisplay();
+        if (sessionTimer) {
+            clearInterval(sessionTimer);
+            sessionTimer = null;
+            sessionStartTime = null;
+            progressBar.style.width = '0%';
+        }
     }
 
     // Start session when music starts playing

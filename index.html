@@ -36,18 +36,84 @@
             </section>
 
             <section id="binaural-section">
-                <h2>Binaural Beats</h2>
-                <div class="frequency-selector">
-                    <button class="freq-btn" data-freq="delta">Delta (0.5-4.0 Hz)</button>
-                    <button class="freq-btn" data-freq="theta">Theta (4.5-7.5 Hz)</button>
-                    <button class="freq-btn" data-freq="alpha">Alpha (8.4-12 Hz)</button>
+                <div class="section-header">
+                    <h2>Binaural Beat Generator</h2>
+                    <button id="help-icon" class="help-icon" aria-label="Help">?</button>
                 </div>
+                <div class="frequency-layers">
+                    <div class="layer-group">
+                        <h3>Alpha Bridge Layer (8.4-12 Hz)</h3>
+                        <div class="frequency-buttons">
+                            <button class="freq-btn" data-layer="alpha" data-index="0">Bridge Conscious/Subconscious (8.4 Hz)</button>
+                            <button class="freq-btn" data-layer="alpha" data-index="1">Mind-Body Integration (10.5 Hz)</button>
+                            <button class="freq-btn" data-layer="alpha" data-index="2">Centering/Grounding (12 Hz)</button>
+                        </div>
+                    </div>
+                    
+                    <div class="layer-group">
+                        <h3>Theta Transformation Layer (4.5-7.5 Hz)</h3>
+                        <div class="frequency-buttons">
+                            <button class="freq-btn" data-layer="theta" data-index="0">Deep Meditation (4.5 Hz)</button>
+                            <button class="freq-btn" data-layer="theta" data-index="1">Inner Child Healing (5.5 Hz)</button>
+                            <button class="freq-btn" data-layer="theta" data-index="2">Creative Reprogramming (7.0 Hz)</button>
+                        </div>
+                    </div>
+                    
+                    <div class="layer-group">
+                        <h3>Delta Reprogramming Layer (0.5-4.0 Hz)</h3>
+                        <div class="frequency-buttons">
+                            <button class="freq-btn" data-layer="delta" data-index="0">Trauma Release (1.0 Hz)</button>
+                            <button class="freq-btn" data-layer="delta" data-index="1">Healing Sleep (2.25 Hz)</button>
+                            <button class="freq-btn" data-layer="delta" data-index="2">Subconscious Access (3.5 Hz)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="journey-presets">
+                    <h3>Therapeutic Journeys</h3>
+                    <div class="preset-buttons">
+                        <div class="journey-preset">
+                            <button class="journey-btn" data-journey="habitChange">Habit Change Journey</button>
+                            <p class="journey-description">
+                                Progressive transition through states:<br>
+                                • Alpha (10 Hz) - 5min: Conscious awareness<br>
+                                • Theta (6 Hz) - 10min: Deep reprogramming<br>
+                                • Delta (3 Hz) - 5min: Subconscious integration
+                            </p>
+                        </div>
+                        <div class="journey-preset">
+                            <button class="journey-btn" data-journey="emotionalHealing">Emotional Healing</button>
+                            <p class="journey-description">
+                                Theta-focused healing:<br>
+                                • Primary: 5.5 Hz - Emotional processing<br>
+                                • Secondary: 7.5 Hz - Creative reprogramming<br>
+                                • Alternating pattern for deep healing
+                            </p>
+                        </div>
+                        <div class="journey-preset">
+                            <button class="journey-btn" data-journey="deepSleep">Deep Sleep Rewiring</button>
+                            <p class="journey-description">
+                                Delta-dominant pattern:<br>
+                                • Theta (4.5 Hz) - 5min: Gentle transition<br>
+                                • Delta (2.0 Hz) - 10min: Deep healing sleep<br>
+                                • Delta (3.5 Hz) - 5min: Subconscious access
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="volume-control">
                     <label>Binaural Volume</label>
-                    <input type="range" id="binaural-volume" min="0" max="100" value="30">
-                    <span class="volume-value">30%</span>
+                    <input type="range" id="binaural-volume" min="0" max="100" value="5">
+                    <span class="volume-value">5%</span>
                 </div>
-                <div id="frequency-display">Current Frequency: <span>10 Hz</span></div>
+                <div id="frequency-display">Current Frequency: <span>8.4 Hz</span></div>
+                <div id="journey-status" style="display: none;">
+                    Journey Progress: <span>0%</span>
+                    <div class="journey-progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                </div>
             </section>
 
             <section id="voice-section">
@@ -86,6 +152,44 @@
             </section>
         </main>
     </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Brainwave Frequencies Guide</h2>
+            
+            <h3>Delta Range (0.5–4 Hz)</h3>
+            <p>Delta waves are the slowest brainwaves, associated with deep sleep, healing, and the subconscious mind.</p>
+            <ul>
+                <li>0.5–1.5 Hz: Often linked to deep trauma release and regenerative processes. This aligns with theories that delta waves support the body's natural healing and memory consolidation.</li>
+                <li>2.0–2.5 Hz: Commonly associated with deep restorative sleep, which is critical for physical healing and immune function.</li>
+                <li>3.0–4.0 Hz: Deep subconscious access aligns with findings that delta states are where subconscious processing and profound stillness occur.</li>
+            </ul>
+
+            <h3>Theta Range (4–8 Hz)</h3>
+            <p>Theta waves are associated with creativity, intuition, and emotional healing.</p>
+            <ul>
+                <li>4.5 Hz: This frequency is indeed linked to deep meditation and intuitive insight, often seen in practices like mindfulness or Vipassana meditation.</li>
+                <li>5.5 Hz: Inner child/emotional healing resonates with theta's role in processing emotions and fostering connection to deeper psychological layers.</li>
+                <li>6.5–7.5 Hz: Creative reprogramming aligns with theta's association with visualization and accessing creative potential.</li>
+            </ul>
+
+            <h3>Alpha Range (8–12 Hz)</h3>
+            <p>Alpha waves are linked to relaxation, creativity, and a bridge between the conscious and subconscious mind.</p>
+            <ul>
+                <li>8.4 Hz: A plausible "bridge" frequency for integrating conscious and subconscious states, often tied to light meditative or reflective states.</li>
+                <li>10.5 Hz: Mind-body integration is consistent with alpha's role in relaxation and synchronizing mental and physical states.</li>
+                <li>12 Hz: Centering and grounding fit well here, as higher alpha frequencies are linked to calm focus and balance.</li>
+            </ul>
+
+            <div class="note">
+                <h4>Notes on Validation</h4>
+                <p>While this breakdown is consistent with broader understanding, the specific applications (e.g., "deep trauma release" or "inner child healing") may derive more from anecdotal evidence or specific schools of thought rather than universally accepted neuroscience. The precise effects of these frequencies can also vary depending on the individual, the context, and the method of entrainment.</p>
+            </div>
+        </div>
+    </div>
+
     <script src="audio-tracks.js"></script>
     <script src="binaural.js"></script>
     <script src="app.js"></script>
