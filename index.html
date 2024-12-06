@@ -15,9 +15,15 @@
         <main>
             <section id="music-section">
                 <h2>Music Selection</h2>
-                <select id="track-selector">
-                    <option value="">Select a Track</option>
-                </select>
+                <div class="track-selection">
+                    <select id="track-selector">
+                        <option value="">Select a Track</option>
+                    </select>
+                    <div class="version-selector">
+                        <button id="version-a" class="version-btn active">Version A</button>
+                        <button id="version-b" class="version-btn">Version B</button>
+                    </div>
+                </div>
                 <div class="controls">
                     <button id="play-pause">Play</button>
                     <button id="loop">Loop</button>

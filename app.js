@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let audioChunks = [];
     let recordedAudio = null;
     let sessionTimer = null;
+    let currentTrack = null;
+    let currentVersion = 'A'; // Default to version A
     
     // Populate track selector
     const trackSelector = document.getElementById('track-selector');
@@ -15,6 +17,34 @@ document.addEventListener('DOMContentLoaded', () => {
         option.textContent = track.name;
         trackSelector.appendChild(option);
     });
+
+    // Version selection
+    const versionA = document.getElementById('version-a');
+    const versionB = document.getElementById('version-b');
+
+    versionA.addEventListener('click', () => switchVersion('A'));
+    versionB.addEventListener('click', () => switchVersion('B'));
+
+    function switchVersion(version) {
+        currentVersion = version;
+        const wasPlaying = !audioPlayer.paused;
+        const currentTime = audioPlayer.currentTime;
+        
+        // Update button states
+        versionA.classList.toggle('active', version === 'A');
+        versionB.classList.toggle('active', version === 'B');
+
+        if (currentTrack) {
+            // Load the new version while maintaining playback state
+            audioPlayer.src = version === 'A' ? currentTrack.versionA : currentTrack.versionB;
+            audioPlayer.load();
+            audioPlayer.currentTime = currentTime;
+            
+            if (wasPlaying) {
+                audioPlayer.play().catch(e => console.error('Playback failed:', e));
+            }
+        }
+    }
 
     // Volume controls
     const musicVolume = document.getElementById('music-volume');
@@ -46,7 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
     trackSelector.addEventListener('change', () => {
         const selectedTrack = audioTracks[trackSelector.value];
         if (selectedTrack) {
-            audioPlayer.src = selectedTrack.versionA;
+            currentTrack = selectedTrack;
+            const selectedVersion = currentVersion === 'A' ? selectedTrack.versionA : selectedTrack.versionB;
+            
+            audioPlayer.src = selectedVersion;
+            audioPlayer.onerror = function() {
+                console.error('Error loading audio file:', selectedVersion);
+                alert('Audio file not found. Please ensure the audio files are in the correct location.');
+            };
             audioPlayer.load();
         }
     });
@@ -55,8 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const playPauseBtn = document.getElementById('play-pause');
     playPauseBtn.addEventListener('click', () => {
         if (audioPlayer.paused) {
-            audioPlayer.play();
-            playPauseBtn.textContent = 'Pause';
+            audioPlayer.play().then(() => {
+                playPauseBtn.textContent = 'Pause';
+            }).catch(e => {
+                console.error('Playback failed:', e);
+                alert('Please select a track first');
+            });
         } else {
             audioPlayer.pause();
             playPauseBtn.textContent = 'Play';

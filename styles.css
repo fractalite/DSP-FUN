@@ -137,6 +137,38 @@ select, input[type="text"], textarea {
     opacity: 0.8;
 }
 
+.track-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.version-selector {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.version-btn {
+    flex: 1;
+    padding: 0.5rem;
+    background-color: var(--secondary-bg);
+    border: 1px solid var(--accent-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.version-btn.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.version-btn:hover {
+    background-color: var(--hover-color);
+    color: white;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 1rem;

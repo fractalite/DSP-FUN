@@ -2,6 +2,28 @@
 
 A web-based meditation and personal transformation application that combines meditation music, binaural beats, and voice recording for deep subconscious reprogramming.
 
+## Setup
+
+1. Clone the repository
+2. Place your meditation audio files in the following directories:
+   - Version A tracks: `/audio/tracks/version-a/`
+   - Version B tracks: `/audio/tracks/version-b/`
+
+   Use these filenames:
+   - Sacred Solfeggio Dreams II: `sacred-solfeggio-dreams-II.mp3`
+   - Sacred Solfeggio Dreams: `sacred-solfeggio-dreams.mp3`
+   - Angel's Breath: `angels-breath.mp3`
+   - Mother Earth's Embrace: `mother-earth-embrace.mp3`
+   - Sacred Temple Gardens: `sacred-temple-gardens.mp3`
+   - Forest Night: `forest-night.mp3`
+   - Deep Ocean: `deep-ocean.mp3`
+   - Cosmic Flow: `cosmic-flow.mp3`
+   - Deepest Surrender: `deepest-surrender.mp3`
+   - Coming Home: `coming-home.mp3`
+
+3. Open `index.html` in a modern web browser
+4. Grant necessary permissions for audio playback and recording
+
 ## Features
 
 - **Music Player**
@@ -36,15 +58,6 @@ A web-based meditation and personal transformation application that combines med
     - Meditation
     - Deep Sleep
     - Affirmation
-
-## Getting Started
-
-1. Clone the repository
-2. Open `index.html` in a modern web browser
-3. Grant necessary permissions for audio playback and recording
-4. Select a meditation track and frequency
-5. Adjust volumes using presets or manual controls
-6. Set session duration and begin your journey
 
 ## Technical Details
 

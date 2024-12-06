@@ -1,6 +1,6 @@
 class BinauralGenerator {
     constructor() {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.audioContext = null;
         this.oscillatorLeft = null;
         this.oscillatorRight = null;
         this.gainNode = null;
@@ -8,7 +8,18 @@ class BinauralGenerator {
         this.isPlaying = false;
     }
 
+    initializeContext() {
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+    }
+
     initialize() {
+        this.initializeContext();
+        
         this.oscillatorLeft = this.audioContext.createOscillator();
         this.oscillatorRight = this.audioContext.createOscillator();
         this.gainNode = this.audioContext.createGain();
