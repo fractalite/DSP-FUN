@@ -58,6 +58,7 @@ class AffirmationGenerator {
         this.generateBtn = document.getElementById('generate-script');
         this.affirmationsArea = document.getElementById('affirmations-area');
         this.saveBtn = document.getElementById('save-affirmation');
+        this.helpBtn = document.getElementById('help-affirmations');
 
         // Populate category select
         this.populateCategories();
@@ -69,6 +70,27 @@ class AffirmationGenerator {
         if (this.saveBtn) {
             this.saveBtn.addEventListener('click', () => this.saveToFavorites());
         }
+        if (this.helpBtn) {
+            this.helpBtn.addEventListener('click', () => {
+                const modal = document.getElementById('ai-help-modal');
+                if (modal) modal.style.display = 'block';
+            });
+        }
+
+        // Close modal when clicking close button or outside
+        const closeButtons = document.querySelectorAll('.close');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => modal.style.display = 'none');
+            });
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
     }
 
     populateCategories() {

@@ -148,7 +148,7 @@
             <section id="ai-script-section">
                 <div class="section-header">
                     <h2>Affirmation Generator</h2>
-                    <button id="help-affirmations" class="help-icon" aria-label="Help">?</button>
+                    <button id="help-affirmations" class="help-icon" aria-label="Help" onclick="document.getElementById('ai-help-modal').style.display='block'">?</button>
                 </div>
                 <div class="generator-controls">
                     <select id="category-select">
@@ -185,7 +185,7 @@
         </main>
     </div>
 
-    <!-- Help Modal -->
+    <!-- Help Modals -->
     <div id="help-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -219,6 +219,16 @@
                 <h4>Notes on Validation</h4>
                 <p>While this breakdown is consistent with broader understanding, the specific applications (e.g., "deep trauma release" or "inner child healing") may derive more from anecdotal evidence or specific schools of thought rather than universally accepted neuroscience. The precise effects of these frequencies can also vary depending on the individual, the context, and the method of entrainment.</p>
             </div>
+        </div>
+    </div>
+
+    <div id="ai-help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('ai-help-modal').style.display='none'">&times;</span>
+            <h2>AI Affirmation Generator Guide</h2>
+            <p>This feature harnesses the power of Llama 3.3 AI to create personalized affirmations tailored to your needs.</p>
+            <p>As we're using a shared community API, please allow time between requests to ensure everyone can benefit from this resource.</p>
+            <p>Don't worry if the AI is temporarily unavailable - you'll still receive quality affirmations from our carefully curated templates.</p>
         </div>
     </div>
 
