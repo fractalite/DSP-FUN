@@ -103,14 +103,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Play/Pause control for music
     const playPauseBtn = document.getElementById('play-pause');
     if (playPauseBtn) {
-        playPauseBtn.addEventListener('click', () => {
+        let isPlaybackPending = false;
+        
+        playPauseBtn.addEventListener('click', async () => {
+            if (isPlaybackPending) return; // Prevent multiple clicks while loading
+            
+            if (!currentTrack) {
+                alert('Please select a track first');
+                return;
+            }
+
             if (audioPlayer.paused) {
-                audioPlayer.play().then(() => {
+                isPlaybackPending = true;
+                try {
+                    await audioPlayer.play();
                     playPauseBtn.textContent = 'Pause';
-                }).catch(e => {
+                } catch (e) {
                     console.error('Playback failed:', e);
-                    alert('Please select a track first');
-                });
+                    if (e.name !== 'AbortError') { // Ignore abort errors from Stop All
+                        alert('Failed to play audio. Please try again.');
+                    }
+                    playPauseBtn.textContent = 'Play';
+                } finally {
+                    isPlaybackPending = false;
+                }
             } else {
                 audioPlayer.pause();
                 playPauseBtn.textContent = 'Play';

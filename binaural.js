@@ -103,11 +103,15 @@ class BinauralGenerator {
                 const index = parseInt(btn.dataset.index);
                 
                 if (btn.classList.contains('active')) {
-                    // If button is active, deactivate it and stop that frequency
                     btn.classList.remove('active');
                     this.stop();
                 } else {
-                    // Activate this button but don't deactivate others
+                    // Stop any active journey when starting a frequency
+                    document.querySelectorAll('.journey-btn.active').forEach(b => {
+                        b.classList.remove('active');
+                        this.stopJourney();
+                    });
+                    
                     btn.classList.add('active');
                     this.setFrequency(layer, index);
                 }
@@ -117,16 +121,65 @@ class BinauralGenerator {
         document.querySelectorAll('.journey-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const journey = btn.dataset.journey;
-                // For journeys, we do want to deactivate other journey buttons
-                const journeyButtons = document.querySelectorAll('.journey-btn');
-                journeyButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
                 
-                // Also deactivate any active frequency buttons
-                document.querySelectorAll('.freq-btn.active').forEach(b => b.classList.remove('active'));
-                
-                this.startJourney(journey);
+                if (btn.classList.contains('active')) {
+                    btn.classList.remove('active');
+                    this.stopJourney();  // Clean up journey state
+                    this.stop();         // Stop the audio
+                } else {
+                    btn.classList.add('active');
+                    this.startJourney(journey);
+                }
             });
+        });
+
+        // Add Stop All button handler
+        document.getElementById('stop-all').addEventListener('click', () => {
+            // Stop any active journey
+            this.stopJourney();
+            // Stop any playing audio
+            this.stop();
+            // Remove active state from all buttons
+            document.querySelectorAll('.freq-btn.active, .journey-btn.active').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Stop voice recorder if it's active
+            if (window.voiceRecorder) {
+                if (window.voiceRecorder.isRecording) {
+                    window.voiceRecorder.stopRecording();
+                }
+                if (window.voiceRecorder.isPlaying) {
+                    window.voiceRecorder.stopPlayback();
+                }
+            }
+
+            // Stop background music if it's playing
+            const audioPlayer = document.querySelector('audio');
+            if (audioPlayer) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                const playPauseBtn = document.getElementById('play-pause');
+                if (playPauseBtn) {
+                    playPauseBtn.textContent = 'Play';
+                }
+                // Reset loop button state
+                const loopBtn = document.getElementById('loop');
+                if (loopBtn) {
+                    loopBtn.classList.remove('active');
+                }
+            }
+            
+            // Stop any active session
+            if (window.sessionManager && window.sessionManager.currentSession) {
+                window.sessionManager.stopSession();
+            }
+
+            // Reset play/pause button states
+            const playPauseBtn = document.getElementById('play-pause');
+            if (playPauseBtn) {
+                playPauseBtn.textContent = 'Play';
+            }
         });
     }
 
