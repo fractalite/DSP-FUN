@@ -70,3 +70,53 @@ A web-based meditation and personal transformation application that combines med
 ## License
 
 MIT License
+
+## Upgrade Roadmap
+
+### 1. Essential/Easy Upgrades
+- Save favorite affirmations/scripts library
+- Custom binaural frequency presets
+- Download recorded sessions
+- Basic audio visualization
+- Dark/light theme toggle
+- Session history/stats
+
+### 2. User Experience Enhancements
+- Guided breathing animations
+- Progressive journey presets (e.g., 30-day programs)
+- Basic sound effects (chimes, bells for transitions)
+- Mobile app version
+- Offline mode
+- Progress tracking
+
+### 3. Audio Features
+- Nature sound layer mixer (rain, waves, etc.)
+- Basic sound editing for recordings
+- Import custom background tracks
+- Multi-track voice recording layers
+- Export/share capabilities
+
+### 4. Advanced Features
+- Community sharing of scripts/affirmations
+- Integration with wearables for biometrics
+- Scheduling/reminder system
+- Custom journey creator
+- Cloud backup of sessions/settings
+
+### 5. Premium Features
+- Advanced AI integrations
+- Professional voice filter effects
+- Expanded music library
+- Collaborative session modes
+- Guided meditation library
+
+### 6. Therapeutic Enhancements
+- Mood tracking
+- Goal setting and progress
+- Integration with therapy frameworks
+- Custom frequency patterns
+- Scientific feedback/reporting
+
+## Contributing
+
+We welcome contributions! Please see our contributing guidelines for more details.
