@@ -10,6 +10,8 @@ export default defineConfig({
     assetsDir: 'assets',
     // Generate sourcemaps for better debugging
     sourcemap: true,
+    // Ensure assets are copied to build
+    assetsInclude: ['**/*.png', '**/*.svg', '**/*.jpg', '**/*.gif'],
   },
 
   // Development server configuration
