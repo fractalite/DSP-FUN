@@ -1,20 +1,20 @@
+import ENV from './config.js';
+
 class AIAssistant {
     constructor() {
         this.initialized = false;
-        this.backendUrl = this.getBackendUrl();
+        this.backendUrl = ENV.BACKEND_URL;
         this.initPromise = this.init();
     }
 
-    getBackendUrl() {
-        // Use production URL when not in development
-        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:3001'
-            : 'https://deepr-love-backend.netlify.app';
-    }
-
     async init() {
+        if (!ENV.ENABLE_AI) {
+            console.log('AI features are disabled');
+            return;
+        }
+
         try {
-            console.log('Initializing AI Assistant, fetching config from:', `${this.backendUrl}/api/config`);
+            console.log('Initializing AI Assistant using backend:', this.backendUrl);
             
             const response = await fetch(`${this.backendUrl}/api/config`, {
                 method: 'GET',
@@ -24,38 +24,30 @@ class AIAssistant {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Config response not OK:', response.status, errorText);
                 throw new Error(`Failed to load configuration: ${response.status}`);
             }
 
             const config = await response.json();
-            console.log('Received config:', config);
-
-            if (!config.apiKeyExists) {
-                throw new Error('API key not configured on server');
-            }
-
-            this.MODEL_ID = config.modelId;
             this.initialized = true;
-            console.log('AI Assistant successfully initialized');
-            return true;
+            console.log('AI Assistant initialized successfully');
+            return config;
         } catch (error) {
-            console.error('Failed to initialize AI Assistant:', error);
-            throw error;
+            console.warn('AI Assistant initialization failed:', error);
+            // Don't throw, just log the error and continue
+            return null;
         }
     }
 
     async generateAffirmations(intention) {
+        if (!ENV.ENABLE_AI || !this.initialized) {
+            return {
+                success: false,
+                message: 'AI features are not available. Please try again later.',
+                affirmations: []
+            };
+        }
+
         try {
-            await this.initPromise;
-
-            if (!this.initialized) {
-                throw new Error('AI Assistant not initialized');
-            }
-
-            console.log('Sending intention to server:', intention);
-
             const response = await fetch(`${this.backendUrl}/api/generate`, {
                 method: 'POST',
                 headers: {
@@ -66,21 +58,21 @@ class AIAssistant {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to generate affirmations');
+                throw new Error(`Generation failed: ${response.status}`);
             }
 
-            const data = await response.json();
-            console.log('Full server response:', JSON.stringify(data, null, 2));
-
-            if (!data.affirmations) {
-                throw new Error('No affirmations received from server');
-            }
-
-            return data;
+            const result = await response.json();
+            return {
+                success: true,
+                affirmations: result.affirmations || []
+            };
         } catch (error) {
-            console.error('Error in AI Assistant:', error);
-            throw error;
+            console.error('Failed to generate affirmations:', error);
+            return {
+                success: false,
+                message: 'Failed to generate affirmations. Please try again.',
+                affirmations: []
+            };
         }
     }
 }

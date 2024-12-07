@@ -68,50 +68,48 @@ class AffirmationGenerator {
     }
 
     async generateAffirmations() {
-        if (!this.intentionInput || !this.generateBtn || !this.affirmationDisplay) {
-            console.error('Required elements not found');
-            return;
-        }
-
+        if (!this.intentionInput || !this.affirmationDisplay) return;
+        
         const intention = this.intentionInput.value.trim();
         if (!intention) {
-            this.affirmationDisplay.innerHTML = '<p class="error">Please enter an intention or goal.</p>';
+            this.affirmationDisplay.innerHTML = '<p class="error">Please enter your intention or goal.</p>';
             return;
         }
 
-        this.generateBtn.disabled = true;
         this.affirmationDisplay.innerHTML = '<p class="loading">Generating affirmations...</p>';
-
+        
         try {
-            const response = await this.aiAssistant.generateAffirmations(intention);
-            const affirmations = response.affirmations.split('\n');
+            const result = await this.aiAssistant.generateAffirmations(intention);
             
-            const container = document.createElement('div');
-            container.className = 'affirmations-container';
-
-            affirmations.forEach(affirmation => {
-                if (affirmation.trim()) {
-                    const p = document.createElement('p');
-                    p.className = 'affirmation-item';
-                    p.textContent = affirmation;
-                    container.appendChild(p);
-                }
-            });
-
-            this.affirmationDisplay.innerHTML = '';
-            this.affirmationDisplay.appendChild(container);
-            
-            if (this.saveBtn) {
-                this.saveBtn.style.display = 'block';
+            if (!result.success) {
+                this.affirmationDisplay.innerHTML = `
+                    <p class="error">${result.message || 'Unable to generate affirmations at this time.'}</p>
+                    <p>You can still write your own affirmations in the text area below.</p>
+                `;
+                return;
             }
-        } catch (error) {
-            console.error('Error:', error);
+
+            if (!result.affirmations || result.affirmations.length === 0) {
+                this.affirmationDisplay.innerHTML = `
+                    <p class="error">No affirmations were generated. Please try again with a different intention.</p>
+                `;
+                return;
+            }
+
+            const affirmationsHtml = result.affirmations
+                .map(affirmation => `<p class="affirmation">${affirmation}</p>`)
+                .join('');
+
             this.affirmationDisplay.innerHTML = `
-                <div class="error-message">
-                    <p>${error.message}</p>
-                </div>`;
-        } finally {
-            this.generateBtn.disabled = false;
+                <div class="affirmations-container">
+                    ${affirmationsHtml}
+                </div>
+            `;
+        } catch (error) {
+            console.error('Error generating affirmations:', error);
+            this.affirmationDisplay.innerHTML = `
+                <p class="error">Unable to generate affirmations. You can still write your own below.</p>
+            `;
         }
     }
 
