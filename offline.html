@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - deepr.love</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <style>
+        body {
+            font-family: 'Fraunces', serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #cccccc;
+        }
+
+        .features-list {
+            text-align: left;
+            margin: 20px 0;
+            padding: 0 20px;
+        }
+
+        .features-list li {
+            margin: 10px 0;
+            color: #cccccc;
+        }
+
+        .retry-button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .retry-button:hover {
+            background-color: #357abd;
+        }
+
+        .logo-text {
+            font-size: 2em;
+            margin: 10px 0;
+        }
+
+        .dot {
+            color: #4a90e2;
+        }
+
+        .love {
+            color: #e24a7b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="assets/Logo.png" alt="deepr.love Logo" class="logo">
+        <h1 class="logo-text">deepr<span class="dot">.</span><span class="love">love</span></h1>
+        <div class="message">
+            <p>You're currently offline, but don't worry! Many features are still available:</p>
+        </div>
+        <ul class="features-list">
+            <li>Previously generated affirmations</li>
+            <li>Saved meditation sessions</li>
+            <li>Binaural beat generation</li>
+            <li>Voice recording (stored locally)</li>
+            <li>Session tracking and statistics</li>
+        </ul>
+        <p class="message">
+            Reconnect to access all features and sync your data.
+        </p>
+        <button class="retry-button" onclick="window.location.reload()">
+            Try Again
+        </button>
+    </div>
+    <script>
+        // Check connection status periodically
+        setInterval(() => {
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
