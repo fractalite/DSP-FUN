@@ -6,10 +6,10 @@ class AIAssistant {
     }
 
     getBackendUrl() {
-        // Default to port 3001 for backend
-        return window.location.port === '5173' || window.location.port === '3006'
+        // Use production URL when not in development
+        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:3001'
-            : 'http://localhost:3001';
+            : 'https://deepr-love-backend.netlify.app';
     }
 
     async init() {
