@@ -1,13 +1,48 @@
+// Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize components
     let audioPlayer = new Audio();
     let currentTrack = null;
     let currentVersion = 'A'; // Default to version A
-    
-    // Populate track selector
+    let isPlaybackRequested = false;
+    let isFlowActive = false;
+    let trackList = [];
+    let currentTrackIndex = -1;
+
+    // Helper function to get random track and version
+    function getRandomTrack() {
+        const randomIndex = Math.floor(Math.random() * trackList.length);
+        const randomVersion = Math.random() < 0.5 ? 'A' : 'B';
+        return { track: trackList[randomIndex], version: randomVersion };
+    }
+
+    // Function to play a specific track and version
+    function playTrackAndVersion(track, version) {
+        trackSelector.value = track.key;
+        currentTrack = audioTracks[track.key];
+        currentVersion = version;
+        
+        // Update version buttons
+        if (versionA && versionB) {
+            versionA.classList.toggle('active', version === 'A');
+            versionB.classList.toggle('active', version === 'B');
+        }
+
+        audioPlayer.src = version === 'A' ? currentTrack.versionA : currentTrack.versionB;
+        audioPlayer.load();
+        audioPlayer.play().then(() => {
+            if (playPauseBtn) playPauseBtn.textContent = 'Pause';
+        }).catch(error => console.warn('Playback failed:', error));
+    }
+
+    // Initialize audio player settings
+    audioPlayer.loop = false;
+
+    // Populate track selector and track list
     const trackSelector = document.getElementById('track-selector');
     if (trackSelector) {
         Object.entries(audioTracks).forEach(([key, track]) => {
+            trackList.push({ key, ...track });
             const option = document.createElement('option');
             option.value = key;
             option.textContent = track.name;
@@ -35,12 +70,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (currentTrack) {
+            isPlaybackRequested = wasPlaying;
             audioPlayer.src = version === 'A' ? currentTrack.versionA : currentTrack.versionB;
             audioPlayer.load();
             audioPlayer.currentTime = currentTime;
             
             if (wasPlaying) {
-                audioPlayer.play().catch(e => console.error('Playback failed:', e));
+                const playPromise = audioPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        if (error.name === 'AbortError' && isPlaybackRequested) {
+                            // Retry playback once if it was aborted but still requested
+                            setTimeout(() => {
+                                audioPlayer.play().catch(e => console.warn('Retry playback failed:', e));
+                            }, 100);
+                        }
+                    });
+                }
             }
         }
     }
@@ -88,116 +134,126 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedTrack = audioTracks[trackSelector.value];
             if (selectedTrack) {
                 currentTrack = selectedTrack;
-                const selectedVersion = currentVersion === 'A' ? selectedTrack.versionA : selectedTrack.versionB;
-                
-                audioPlayer.src = selectedVersion;
-                audioPlayer.onerror = function() {
-                    console.error('Error loading audio file:', selectedVersion);
-                    alert('Audio file not found. Please ensure the audio files are in the correct location.');
-                };
+                currentTrackIndex = trackList.findIndex(track => track.key === trackSelector.value);
+                audioPlayer.src = currentVersion === 'A' ? selectedTrack.versionA : selectedTrack.versionB;
                 audioPlayer.load();
             }
         });
     }
 
-    // Play/Pause control for music
+    // Play/Pause button
     const playPauseBtn = document.getElementById('play-pause');
     if (playPauseBtn) {
-        let isPlaybackPending = false;
-        
-        playPauseBtn.addEventListener('click', async () => {
-            if (isPlaybackPending) return; // Prevent multiple clicks while loading
-            
-            if (!currentTrack) {
-                alert('Please select a track first');
-                return;
-            }
-
+        playPauseBtn.addEventListener('click', () => {
             if (audioPlayer.paused) {
-                isPlaybackPending = true;
-                try {
-                    await audioPlayer.play();
-                    playPauseBtn.textContent = 'Pause';
-                } catch (e) {
-                    console.error('Playback failed:', e);
-                    if (e.name !== 'AbortError') { // Ignore abort errors from Stop All
-                        alert('Failed to play audio. Please try again.');
-                    }
-                    playPauseBtn.textContent = 'Play';
-                } finally {
-                    isPlaybackPending = false;
+                isPlaybackRequested = true;
+                const playPromise = audioPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            playPauseBtn.textContent = 'Pause';
+                        })
+                        .catch(error => {
+                            if (error.name === 'AbortError' && isPlaybackRequested) {
+                                // Retry playback once if it was aborted but still requested
+                                setTimeout(() => {
+                                    audioPlayer.play()
+                                        .then(() => {
+                                            playPauseBtn.textContent = 'Pause';
+                                        })
+                                        .catch(e => console.warn('Retry playback failed:', e));
+                                }, 100);
+                            }
+                        });
                 }
             } else {
+                isPlaybackRequested = false;
                 audioPlayer.pause();
                 playPauseBtn.textContent = 'Play';
             }
         });
     }
 
-    // Loop control for music
+    // Loop button
     const loopBtn = document.getElementById('loop');
     if (loopBtn) {
         loopBtn.addEventListener('click', () => {
             audioPlayer.loop = !audioPlayer.loop;
-            loopBtn.style.backgroundColor = audioPlayer.loop ? 'var(--hover-color)' : 'var(--accent-color)';
-        });
-    }
-
-    // Help modal
-    const helpIcon = document.getElementById('help-icon');
-    const helpModal = document.getElementById('help-modal');
-    const closeModal = document.querySelector('.close');
-
-    if (helpIcon && helpModal && closeModal) {
-        helpIcon.addEventListener('click', () => {
-            helpModal.style.display = 'block';
-        });
-
-        closeModal.addEventListener('click', () => {
-            helpModal.style.display = 'none';
-        });
-
-        window.addEventListener('click', (event) => {
-            if (event.target === helpModal) {
-                helpModal.style.display = 'none';
+            loopBtn.classList.toggle('active');
+            
+            // If enabling loop, disable flow
+            if (audioPlayer.loop && isFlowActive) {
+                isFlowActive = false;
+                if (flowBtn) flowBtn.classList.remove('active');
             }
         });
     }
 
-    // Volume Presets
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const preset = btn.dataset.preset;
-            if (preset) {
-                applyVolumePreset(preset);
+    // Flow button
+    const flowBtn = document.getElementById('flow');
+    if (flowBtn) {
+        flowBtn.addEventListener('click', () => {
+            isFlowActive = !isFlowActive;
+            flowBtn.classList.toggle('active');
+            
+            // If enabling flow, disable loop
+            if (isFlowActive && audioPlayer.loop) {
+                audioPlayer.loop = false;
+                if (loopBtn) loopBtn.classList.remove('active');
+            }
+            
+            // If activating flow and nothing is currently playing, start with random track
+            if (isFlowActive && audioPlayer.paused && trackList.length > 0) {
+                const { track, version } = getRandomTrack();
+                playTrackAndVersion(track, version);
             }
         });
+    }
+
+    // Handle track ending
+    audioPlayer.addEventListener('ended', () => {
+        if (isFlowActive && trackList.length > 0) {
+            const { track, version } = getRandomTrack();
+            playTrackAndVersion(track, version);
+        } else if (!audioPlayer.loop) {
+            if (playPauseBtn) playPauseBtn.textContent = 'Play';
+        }
     });
 
-    function applyVolumePreset(preset) {
-        const presets = {
-            meditation: { music: 30, binaural: 5, voice: 70 },
-            sleep: { music: 20, binaural: 3, voice: 50 },
-            affirmation: { music: 40, binaural: 5, voice: 100 }
-        };
+    // Stop All button
+    const stopAllBtn = document.getElementById('stop-all');
+    if (stopAllBtn) {
+        const originalClickHandler = stopAllBtn.onclick;
+        stopAllBtn.addEventListener('click', () => {
+            // Stop music
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            if (playPauseBtn) playPauseBtn.textContent = 'Play';
 
-        const settings = presets[preset];
-        if (settings) {
-            if (musicVolume) {
-                musicVolume.value = settings.music;
-                audioPlayer.volume = settings.music / 100;
-            }
-            if (binauralVolume && window.binauralGenerator) {
-                binauralVolume.value = settings.binaural;
-                window.binauralGenerator.setVolume(settings.binaural / 100);
-            }
-            if (voiceVolume && window.voiceRecorder) {
-                voiceVolume.value = settings.voice;
-                window.voiceRecorder.setVolume(settings.voice / 100);
+            // Stop binaural beats
+            if (window.binauralGenerator) {
+                window.binauralGenerator.stop();
+                // Reset all binaural buttons
+                document.querySelectorAll('.freq-btn, .journey-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
             }
 
-            // Update all volume displays
-            document.querySelectorAll('input[type="range"]').forEach(updateVolumeDisplay);
-        }
+            // Stop voice recording playback
+            if (window.voiceRecorder) {
+                window.voiceRecorder.stopPlayback();
+            }
+
+            // Reset loop button
+            const loopBtn = document.getElementById('loop');
+            if (loopBtn) {
+                audioPlayer.loop = false;
+                loopBtn.classList.remove('active');
+            }
+
+            // Stop flow
+            isFlowActive = false;
+            if (flowBtn) flowBtn.classList.remove('active');
+        });
     }
 });
