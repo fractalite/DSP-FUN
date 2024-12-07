@@ -3,91 +3,504 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deep Subconscious Reprogramming</title>
+    <title>deepr.love</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script type="module" src="voice-enhancer.js"></script>
+    <script type="module" src="voice-recording.js"></script>
+    <script type="module" src="session-tracker.js"></script>
+    <script type="module">
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/'
+                    });
+                    console.log('ServiceWorker registration successful with scope:', registration.scope);
+
+                    // Request notification permission
+                    if ('Notification' in window) {
+                        Notification.requestPermission();
+                    }
+
+                    // Setup offline/online handlers
+                    window.addEventListener('online', () => {
+                        console.log('Application is online');
+                        document.body.classList.remove('offline');
+                        // Trigger background sync
+                        registration.sync.register('sync-affirmations');
+                    });
+
+                    window.addEventListener('offline', () => {
+                        console.log('Application is offline');
+                        document.body.classList.add('offline');
+                    });
+                } catch (error) {
+                    console.error('ServiceWorker registration failed:', error);
+                }
+            });
+        }
+
+        // Debug logging
+        console.log('Environment variables set:', {
+            API_KEY_EXISTS: !!window.__GROQ_API_KEY__,
+            API_URL: window.__GROQ_API_URL__,
+            MODEL_ID: window.__GROQ_MODEL_ID__
+        });
+    </script>
 </head>
 <body class="dark-mode">
     <div class="container">
         <header>
-            <h1>Deep Subconscious Reprogramming</h1>
+            <img src="assets/Logo.png" alt="deepr.love Logo" class="logo">
+            <h1 class="logo-text">deepr<span class="dot">.</span><span class="love">love</span></h1>
+            <div class="header-right">
+                <div class="better-with-headphones">🎧 better with headphones</div>
+                <button id="stop-all" class="btn btn-secondary">⏹️ Stop All</button>
+                <button id="theme-toggle" class="btn btn-utility">🌙</button>
+            </div>
         </header>
 
         <main>
-            <section id="music-section">
-                <h2>Music Selection</h2>
-                <div class="track-selection">
-                    <select id="track-selector">
-                        <option value="">Select a Track</option>
-                    </select>
-                    <div class="version-selector">
-                        <button id="version-a" class="version-btn active">Version A</button>
-                        <button id="version-b" class="version-btn">Version B</button>
-                    </div>
+            <div class="module-container">
+                <div class="bracket-decoration">
+                    <span class="module-name">Musiq</span>
                 </div>
-                <div class="controls">
-                    <button id="play-pause">Play</button>
-                    <button id="loop">Loop</button>
+                <section id="music-section">
+                    <div class="section-header">
+                        <h2>Music Selection</h2>
+                        <button id="help-flow" class="help-icon" aria-label="Help" data-modal="flow-help-modal">?</button>
+                    </div>
+                    <div class="track-selection">
+                        <select id="track-selector">
+                            <option value="">Select a Track</option>
+                        </select>
+                        <div class="version-selector">
+                            <button id="version-a" class="btn btn-secondary active">Version A</button>
+                            <button id="version-b" class="btn btn-secondary">Version B</button>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button id="play-pause" class="btn btn-primary">Play</button>
+                        <button id="loop" class="control-btn">
+                            <span class="loop-letter l1">L</span>
+                            <span class="loop-letter l2">O</span>
+                            <span class="loop-letter l3">O</span>
+                            <span class="loop-letter l4">P</span>
+                        </button>
+                        <button id="flow" class="control-btn">
+                            <span class="flow-letter f1">F</span>
+                            <span class="flow-letter f2">L</span>
+                            <span class="flow-letter f3">O</span>
+                            <span class="flow-letter f4">W</span>
+                            <div class="flow-subtitle">play all songs</div>
+                        </button>
+                        <div class="volume-control">
+                            <label>Music Volume</label>
+                            <input type="range" id="music-volume" min="0" max="100" value="60">
+                            <span class="volume-value">60%</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="module-container">
+                <div class="bracket-decoration">
+                    <span class="module-name">Binaural Beats</span>
+                </div>
+                <section id="binaural-section">
+                    <div class="section-header">
+                        <h2>Binaural Beat Generator</h2>
+                        <button id="help-icon" class="help-icon" aria-label="Help" data-modal="help-modal">?</button>
+                    </div>
+                    <div class="frequency-layers">
+                        <div class="layer-group">
+                            <h3>Alpha Bridge Layer (8.4-12 Hz)</h3>
+                            <div class="frequency-buttons">
+                                <button class="freq-btn btn btn-secondary" data-layer="alpha" data-index="0">Bridge Conscious/Subconscious (8.4 Hz)</button>
+                                <button class="freq-btn btn btn-secondary" data-layer="alpha" data-index="1">Mind-Body Integration (10.5 Hz)</button>
+                                <button class="freq-btn btn btn-secondary" data-layer="alpha" data-index="2">Centering/Grounding (12 Hz)</button>
+                            </div>
+                        </div>
+                        
+                        <div class="layer-group">
+                            <h3>Theta Transformation Layer (4.5-7.5 Hz)</h3>
+                            <div class="frequency-buttons">
+                                <button class="freq-btn btn btn-secondary" data-layer="theta" data-index="0">Deep Meditation (4.5 Hz)</button>
+                                <button class="freq-btn btn btn-secondary" data-layer="theta" data-index="1">Inner Child Healing (5.5 Hz)</button>
+                                <button class="freq-btn btn btn-secondary" data-layer="theta" data-index="2">Creative Reprogramming (7.0 Hz)</button>
+                            </div>
+                        </div>
+                        
+                        <div class="layer-group">
+                            <h3>Delta Reprogramming Layer (0.5-4.0 Hz)</h3>
+                            <div class="frequency-buttons">
+                                <button class="freq-btn btn btn-secondary" data-layer="delta" data-index="0">Trauma Release (1.0 Hz)</button>
+                                <button class="freq-btn btn btn-secondary" data-layer="delta" data-index="1">Healing Sleep (2.25 Hz)</button>
+                                <button class="freq-btn btn btn-secondary" data-layer="delta" data-index="2">Subconscious Access (3.5 Hz)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="journey-presets">
+                        <h3>Therapeutic Journeys</h3>
+                        <div class="preset-buttons">
+                            <div class="journey-preset">
+                                <button class="journey-btn" data-journey="habitChange">Habit Change Journey</button>
+                                <p class="journey-description">
+                                    Progressive transition through states:<br>
+                                    • Alpha (10 Hz) - 5min: Conscious awareness<br>
+                                    • Theta (6 Hz) - 10min: Deep reprogramming<br>
+                                    • Delta (3 Hz) - 5min: Subconscious integration
+                                </p>
+                            </div>
+                            <div class="journey-preset">
+                                <button class="journey-btn" data-journey="emotionalHealing">Emotional Healing</button>
+                                <p class="journey-description">
+                                    Theta-focused healing:<br>
+                                    • Primary: 5.5 Hz - Emotional processing<br>
+                                    • Secondary: 7.5 Hz - Creative reprogramming<br>
+                                    • Alternating pattern for deep healing
+                                </p>
+                            </div>
+                            <div class="journey-preset">
+                                <button class="journey-btn" data-journey="deepSleep">Deep Sleep Rewiring</button>
+                                <p class="journey-description">
+                                    Delta-dominant pattern:<br>
+                                    • Theta (4.5 Hz) - 5min: Gentle transition<br>
+                                    • Delta (2.0 Hz) - 10min: Deep healing sleep<br>
+                                    • Delta (3.5 Hz) - 5min: Subconscious access
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="volume-control">
-                        <label>Music Volume</label>
-                        <input type="range" id="music-volume" min="0" max="100" value="60">
-                        <span class="volume-value">60%</span>
+                        <label>Binaural Volume</label>
+                        <input type="range" id="binaural-volume" min="0" max="100" value="5">
+                        <span class="volume-value">5%</span>
                     </div>
-                </div>
-            </section>
+                    <div id="frequency-display">Current Frequency: <span>8.4 Hz</span></div>
+                    <div id="journey-status" style="display: none;">
+                        Journey Progress: <span>0%</span>
+                        <div class="journey-progress-bar">
+                            <div class="progress"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
 
-            <section id="binaural-section">
-                <h2>Binaural Beats</h2>
-                <div class="frequency-selector">
-                    <button class="freq-btn" data-freq="delta">Delta (0.5-4.0 Hz)</button>
-                    <button class="freq-btn" data-freq="theta">Theta (4.5-7.5 Hz)</button>
-                    <button class="freq-btn" data-freq="alpha">Alpha (8.4-12 Hz)</button>
+            <div class="module-container">
+                <div class="bracket-decoration">
+                    <span class="module-name">Affirmations</span>
                 </div>
-                <div class="volume-control">
-                    <label>Binaural Volume</label>
-                    <input type="range" id="binaural-volume" min="0" max="100" value="30">
-                    <span class="volume-value">30%</span>
-                </div>
-                <div id="frequency-display">Current Frequency: <span>10 Hz</span></div>
-            </section>
+                <section id="ai-script-section">
+                    <div class="section-header">
+                        <h2>Affirmation Generator</h2>
+                        <button id="help-affirmations" class="help-icon" aria-label="Help" data-modal="ai-help-modal">?</button>
+                    </div>
+                    <div class="generator-controls">
+                        <input type="text" id="intention-input" placeholder="Enter your intention or goal" class="full-width">
+                        <button id="generate-script" class="btn btn-primary">Generate</button>
+                    </div>
+                    <div id="affirmation-display" class="affirmation-display"></div>
+                    <div class="action-buttons">
+                        <button id="save-btn" class="btn btn-secondary">
+                            <span class="icon">💾</span> Save to Favorites
+                        </button>
+                        <button id="view-favorites-btn" class="btn btn-secondary">
+                            <span class="icon">⭐</span> View Favorites
+                        </button>
+                    </div>
+                </section>
+            </div>
 
-            <section id="voice-section">
-                <h2>Voice Recording</h2>
-                <div class="recording-controls">
-                    <button id="record">Record</button>
-                    <button id="play-recording">Play</button>
+            <div class="module-container">
+                <div class="bracket-decoration">
+                    <span class="module-name">Voice Recording</span>
                 </div>
-                <div class="volume-control">
-                    <label>Voice Volume</label>
-                    <input type="range" id="voice-volume" min="0" max="100" value="100">
-                    <span class="volume-value">100%</span>
-                </div>
-            </section>
+                <section id="voice-recording-section">
+                    <div class="section-header">
+                        <h2>Voice Recording</h2>
+                    </div>
+                    <div class="voice-controls">
+                        <button id="record-btn" class="btn btn-primary">
+                            <span class="record-icon"></span>
+                            Record
+                        </button>
+                        <button id="play-btn" class="btn btn-secondary" disabled>
+                            <span class="play-icon"></span>
+                            Play
+                        </button>
+                        <button id="loop-btn" class="control-btn">
+                            <span class="loop-letter l1">L</span>
+                            <span class="loop-letter l2">O</span>
+                            <span class="loop-letter l3">O</span>
+                            <span class="loop-letter l4">P</span>
+                        </button>
+                        <div class="recording-info">
+                            <div id="recording-time" class="recording-time">00:00</div>
+                        </div>
+                        <div class="volume-control">
+                            <label>Voice Volume</label>
+                            <input type="range" id="voice-volume" min="0" max="100" value="100">
+                            <span class="volume-value">100%</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
 
-            <section id="ai-script-section">
-                <h2>AI Script Assistant</h2>
-                <input type="text" id="intention-input" placeholder="Enter your intention or goal...">
-                <button id="generate-script">Generate Affirmations</button>
-                <textarea id="affirmations-area" readonly></textarea>
-            </section>
+            <div class="module-container">
+                <div class="bracket-decoration">
+                    <span class="module-name">Session Manager</span>
+                </div>
+                <section id="session-section">
+                    <h2>Session Manager</h2>
+                    <div class="session-controls">
+                        <div id="session-timer" class="timer-display">00:00:00</div>
+                        <button id="start-session" class="btn btn-primary">Start Session</button>
+                        <button id="stop-session" class="btn btn-secondary">Stop Session</button>
+                        <div id="session-status">Ready to Start</div>
+                    </div>
+                    <div id="session-stats">
+                        <div class="stat-item">
+                            <h3>Total Sessions</h3>
+                            <p>0</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>Total Time</h3>
+                            <p>00:00:00</p>
+                        </div>
+                    </div>
+                    <div class="weekly-tracker">
+                        <h3>Weekly Sessions</h3>
+                        <div class="day-bars">
+                            <div class="day-bar">
+                                <div class="bar" data-sessions="0"></div>
+                                <span>Mon</span>
+                            </div>
+                            <div class="day-bar">
+                                <div class="bar" data-sessions="0"></div>
+                                <span>Tue</span>
+                            </div>
+                            <div class="day-bar">
+                                <div class="bar" data-sessions="0"></div>
+                                <span>Wed</span>
+                            </div>
+                            <div class="day-bar">
+                                <div class="bar" data-sessions="0"></div>
+                                <span>Thu</span>
+                            </div>
+                            <div class="day-bar">
+                                <div class="bar" data-sessions="0"></div>
+                                <span>Fri</span>
+                            </div>
+                            <div class="day-bar">
+                                <div class="bar" data-sessions="0"></div>
+                                <span>Sat</span>
+                            </div>
+                            <div class="day-bar">
+                                <div class="bar" data-sessions="0"></div>
+                                <span>Sun</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
 
-            <section id="session-controls">
-                <div class="timer-control">
-                    <label>Session Duration</label>
-                    <input type="range" id="session-timer" min="5" max="60" value="20">
-                    <span id="timer-display">20:00</span>
-                </div>
-                <div class="preset-controls">
-                    <button class="preset-btn" data-preset="meditation">Meditation</button>
-                    <button class="preset-btn" data-preset="sleep">Deep Sleep</button>
-                    <button class="preset-btn" data-preset="affirmation">Affirmation</button>
-                </div>
-                <div id="breathing-guide"></div>
-                <div id="progress-bar"></div>
+            <section id="breathing-section" class="breathing-section">
+                <div class="breathing-circle"></div>
             </section>
         </main>
     </div>
-    <script src="audio-tracks.js"></script>
-    <script src="binaural.js"></script>
-    <script src="app.js"></script>
+
+    <!-- Help Modals -->
+    <div id="flow-help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('flow-help-modal').style.display='none'">&times;</span>
+            <h2>How to Use deepr.love</h2>
+            <ol>
+                <li>Choose background music and adjust volume</li>
+                <li>Select binaural frequencies or a therapeutic journey:
+                    <ul>
+                        <li>Single frequencies: Click any frequency button to activate</li>
+                        <li>Therapeutic journeys: Choose a preset journey for guided frequency transitions</li>
+                    </ul>
+                </li>
+                <li>Generate personalized affirmations:
+                    <ul>
+                        <li>Enter your intention or goal</li>
+                        <li>Click generate to create AI-powered affirmations</li>
+                        <li>Save your favorites for future sessions</li>
+                    </ul>
+                </li>
+                <li>Record your voice*:
+                    <ul>
+                        <li>Record your affirmations or intentions</li>
+                        <li>Play back while listening to binaural beats</li>
+                        <li>Loop recording for deeper entrainment</li>
+                    </ul>
+                </li>
+                <li>Start your session and stop when finished to view statistics of your interaction</li>
+            </ol>
+            <p class="note">🎧 For best results, use headphones and find a quiet space</p>
+            <p class="note">* For better voice recording quality, consider lowering the volume of music and binaural beats</p>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('help-modal').style.display='none'">&times;</span>
+            <h2>Brainwave Frequencies Guide</h2>
+            
+            <h3>Delta Range (0.5–4 Hz)</h3>
+            <p>Delta waves are the slowest brainwaves, associated with deep sleep, healing, and the subconscious mind.</p>
+            <ul>
+                <li>0.5–1.5 Hz: Often linked to deep trauma release and regenerative processes. This aligns with theories that delta waves support the body's natural healing and memory consolidation.</li>
+                <li>2.0–2.5 Hz: Commonly associated with deep restorative sleep, which is critical for physical healing and immune function.</li>
+                <li>3.0–4.0 Hz: Deep subconscious access aligns with findings that delta states are where subconscious processing and profound stillness occur.</li>
+            </ul>
+
+            <h3>Theta Range (4–8 Hz)</h3>
+            <p>Theta waves are associated with creativity, intuition, and emotional healing.</p>
+            <ul>
+                <li>4.5 Hz: This frequency is indeed linked to deep meditation and intuitive states.</li>
+                <li>6.3 Hz: Associated with accelerated learning and memory enhancement.</li>
+                <li>7.5 Hz: Often connected to creative insights and problem-solving abilities.</li>
+            </ul>
+
+            <h3>Alpha Range (8–12 Hz)</h3>
+            <p>Alpha waves promote relaxation while maintaining awareness.</p>
+            <ul>
+                <li>8.4 Hz: Creates a bridge between conscious and subconscious processing.</li>
+                <li>10.5 Hz: Promotes whole brain synchronization and mind-body integration.</li>
+                <li>12.0 Hz: Supports mental clarity and present-moment awareness.</li>
+            </ul>
+
+            <p class="reference-link">More info: <a href="https://www.healthline.com/health/binaural-beats" target="_blank">Healthline - Binaural Beats</a></p>
+            <div class="note">
+                <h4>Notes on Validation</h4>
+                <p>While this breakdown is consistent with broader understanding, the specific applications (e.g., "deep trauma release" or "inner child healing") may derive more from anecdotal evidence or specific schools of thought rather than universally accepted neuroscience. The precise effects of these frequencies can also vary depending on the individual, the context, and the method of entrainment.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="ai-help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('ai-help-modal').style.display='none'">&times;</span>
+            <h2>AI Affirmation Generator Guide</h2>
+            <p>This feature harnesses the power of Llama 3.3 AI to create personalized affirmations tailored to your needs.</p>
+            <p>As we're using a shared community API, please allow time between requests to ensure everyone can benefit from this resource.</p>
+            <p>Don't worry if the AI is temporarily unavailable - you'll still receive quality affirmations from our carefully curated templates.</p>
+        </div>
+    </div>
+
+    <div id="favorites-modal" class="modal">
+        <div class="modal-content">
+            <h2>Favorite Affirmations</h2>
+            <div id="favorites-list"></div>
+            <button class="close-modal">Close</button>
+        </div>
+    </div>
+
+    <script type="module" src="config.js"></script>
+    <script type="module" src="ai-integration.js"></script>
+    <script type="module" src="affirmation-system.js"></script>
+    <script type="module" src="audio-tracks.js"></script>
+    <script type="module" src="binaural.js"></script>
+    <script type="module" src="voice-recording.js"></script>
+    <script type="module" src="sessions.js"></script>
+    <script type="module" src="therapeutic.js"></script>
+    <script type="module" src="session-tracker.js"></script>
+    <script type="module" src="app.js"></script>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const root = document.documentElement;
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        root.dataset.theme = savedTheme;
+        themeToggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = root.dataset.theme || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            root.dataset.theme = newTheme;
+            localStorage.setItem('theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+        });
+
+        // Modal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all help icons and modals
+            const helpIcons = document.querySelectorAll('.help-icon');
+            const modals = document.querySelectorAll('.modal');
+            const closeButtons = document.querySelectorAll('.close');
+
+            // Add click event to all help icons
+            helpIcons.forEach(icon => {
+                icon.addEventListener('click', () => {
+                    const modalId = icon.getAttribute('data-modal');
+                    const modal = document.getElementById(modalId);
+                    if (modal) modal.style.display = 'block';
+                });
+            });
+
+            // Add click event to all close buttons
+            closeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = button.closest('.modal');
+                    if (modal) modal.style.display = 'none';
+                });
+            });
+
+            // Close modal when clicking outside
+            window.addEventListener('click', (event) => {
+                modals.forEach(modal => {
+                    if (event.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Timer functionality
+        let timerInterval;
+        let startTime;
+
+        function updateTimer() {
+            const currentTime = new Date().getTime();
+            const elapsedTime = new Date(currentTime - startTime);
+            const hours = String(elapsedTime.getUTCHours()).padStart(2, '0');
+            const minutes = String(elapsedTime.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(elapsedTime.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('session-timer').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        document.getElementById('start-session').addEventListener('click', function() {
+            startTime = new Date().getTime();
+            timerInterval = setInterval(updateTimer, 1000);
+            this.disabled = true;
+            document.getElementById('stop-session').disabled = false;
+            document.getElementById('session-status').textContent = 'Session in Progress';
+        });
+
+        document.getElementById('stop-session').addEventListener('click', function() {
+            clearInterval(timerInterval);
+            document.getElementById('session-timer').textContent = '00:00:00';
+            this.disabled = true;
+            document.getElementById('start-session').disabled = false;
+            document.getElementById('session-status').textContent = 'Session Ended';
+        });
+    </script>
+    <script type="module" src="ai-integration.js"></script>
+    <script type="module" src="affirmation-system.js"></script>
 </body>
 </html>
