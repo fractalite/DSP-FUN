@@ -1,4 +1,4 @@
-const audioTracks = {
+window.audioTracks = {
     'Dreams II': {
         name: 'Sacred Solfeggio Dreams II',
         versionA: 'audio/tracks/version-a/Sacred Solfeggio Dreams II-2.mp3',
@@ -29,6 +29,16 @@ const audioTracks = {
         versionA: 'audio/tracks/version-a/Forest Night-2.mp3',
         versionB: 'audio/tracks/version-b/Forest Night.mp3'
     },
+    'Deepest Surrender': {
+        name: 'Deepest Surrender',
+        versionA: 'audio/tracks/version-a/Deepest Surrender-2.mp3',
+        versionB: 'audio/tracks/version-b/Deepest Surrender.mp3'
+    },
+    'Deepest Surrender II': {
+        name: 'Deepest Surrender II',
+        versionA: 'audio/tracks/version-b/Deepest Surrender II You-2.mp3',
+        versionB: 'audio/tracks/version-a/Deepest Surrender II You.mp3'
+    },
     'Deep Ocean': {
         name: 'Deep Ocean',
         versionA: 'audio/tracks/version-a/Deep Ocean-2.mp3',
@@ -38,11 +48,6 @@ const audioTracks = {
         name: 'Cosmic Flow',
         versionA: 'audio/tracks/version-a/Cosmic Flow-2.mp3',
         versionB: 'audio/tracks/version-b/Cosmic Flow.mp3'
-    },
-    'Deepest Surrender': {
-        name: 'Deepest Surrender',
-        versionA: 'audio/tracks/version-a/Deepest Surrender-2.mp3',
-        versionB: 'audio/tracks/version-b/Deepest Surrender.mp3'
     },
     'Coming Home': {
         name: 'Coming Home',

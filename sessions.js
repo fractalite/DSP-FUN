@@ -11,22 +11,29 @@ class SessionManager {
         this.updateStatsDisplay();
         
         // Initialize event listeners
-        document.getElementById('start-session').addEventListener('click', () => this.startSession());
-        document.getElementById('stop-session').addEventListener('click', () => this.stopSession());
+        const startBtn = document.getElementById('start-session');
+        const stopBtn = document.getElementById('stop-session');
+        
+        if (startBtn) startBtn.addEventListener('click', () => this.startSession());
+        if (stopBtn) stopBtn.addEventListener('click', () => this.stopSession());
     }
 
     startSession() {
         this.currentSession = {
             startTime: new Date(),
-            binauralFrequency: document.querySelector('#frequency-display span').textContent,
+            binauralFrequency: document.querySelector('#frequency-display span')?.textContent || '0',
             hasVoiceRecording: false,
-            affirmations: document.getElementById('affirmations-area').value || null
+            affirmations: document.getElementById('affirmations-area')?.value || ''
         };
         
         // Update UI to show session is active
-        document.getElementById('session-status').textContent = 'Session Active';
-        document.getElementById('start-session').disabled = true;
-        document.getElementById('stop-session').disabled = false;
+        const statusEl = document.getElementById('session-status');
+        const startBtn = document.getElementById('start-session');
+        const stopBtn = document.getElementById('stop-session');
+        
+        if (statusEl) statusEl.textContent = 'Session Active';
+        if (startBtn) startBtn.disabled = true;
+        if (stopBtn) stopBtn.disabled = false;
     }
 
     stopSession() {
@@ -35,7 +42,7 @@ class SessionManager {
         // Complete session data
         this.currentSession.endTime = new Date();
         this.currentSession.duration = (this.currentSession.endTime - this.currentSession.startTime) / 1000; // in seconds
-        this.currentSession.hasVoiceRecording = !!document.getElementById('play-btn').getAttribute('data-recording');
+        this.currentSession.hasVoiceRecording = !!document.getElementById('play-btn')?.getAttribute('data-recording');
         
         // Save session
         this.sessions.push(this.currentSession);
@@ -46,16 +53,20 @@ class SessionManager {
         
         // Update UI
         this.updateStatsDisplay();
-        document.getElementById('session-status').textContent = 'Session Complete';
-        document.getElementById('start-session').disabled = false;
-        document.getElementById('stop-session').disabled = true;
+        const statusEl = document.getElementById('session-status');
+        const startBtn = document.getElementById('start-session');
+        const stopBtn = document.getElementById('stop-session');
+        
+        if (statusEl) statusEl.textContent = 'Session Complete';
+        if (startBtn) startBtn.disabled = false;
+        if (stopBtn) stopBtn.disabled = true;
     }
 
     updateStatsDisplay() {
         const stats = this.calculateStats();
         const statsContainer = document.getElementById('session-stats');
         
-        statsContainer.innerHTML = `
+        if (statsContainer) statsContainer.innerHTML = `
             <div class="stat-item">
                 <h3>Total Sessions</h3>
                 <p>${stats.totalSessions}</p>
@@ -110,7 +121,7 @@ class SessionManager {
     updateHistoryVisualization() {
         const historyContainer = document.getElementById('session-history');
         if (this.sessions.length === 0) {
-            historyContainer.innerHTML = '<p>No sessions recorded yet</p>';
+            if (historyContainer) historyContainer.innerHTML = '<p>No sessions recorded yet</p>';
             return;
         }
 
@@ -118,7 +129,7 @@ class SessionManager {
         const weeklyData = this.getWeeklySessionData();
         
         // Create visualization
-        historyContainer.innerHTML = `
+        if (historyContainer) historyContainer.innerHTML = `
             <div class="weekly-history">
                 ${weeklyData.map(day => `
                     <div class="history-day" style="height: ${day.sessionCount * 20}px">

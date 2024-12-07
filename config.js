@@ -1,15 +1,26 @@
 // Configuration settings for the application
-const config = {
-    // Groq API Configuration
-    GROQ_API_KEY: '', // API key should be set via environment
-    GROQ_API_URL: 'https://api.groq.com/openai/v1/chat/completions',
-    GROQ_MODEL_ID: 'llama-3.3-70b-versatile'
+const ENV = {
+    // API Configuration
+    GROQ_API_KEY: window.__GROQ_API_KEY__,
+    GROQ_API_URL: window.__GROQ_API_URL__ || 'https://api.groq.com/openai/v1/chat/completions',
+    GROQ_MODEL_ID: window.__GROQ_MODEL_ID__ || 'llama-3.3-70b-versatile',
+    
+    // Feature flags
+    ENABLE_AI: window.__ENABLE_AI__ !== 'false',
+    ENABLE_VOICE_RECORDING: true,
+    ENABLE_BINAURAL_BEATS: true,
+    ENABLE_AFFIRMATIONS: true
 };
 
-// Load API key from environment if available
-if (typeof ENV_CONFIG !== 'undefined' && ENV_CONFIG.GROQ_API_KEY) {
-    config.GROQ_API_KEY = ENV_CONFIG.GROQ_API_KEY;
-}
+// Log configuration status
+console.log('Config initialized:', {
+    API_KEY_EXISTS: !!ENV.GROQ_API_KEY,
+    API_KEY_LENGTH: ENV.GROQ_API_KEY ? ENV.GROQ_API_KEY.length : 0,
+    API_URL: ENV.GROQ_API_URL,
+    MODEL_ID: ENV.GROQ_MODEL_ID,
+    ENABLE_AI: ENV.ENABLE_AI
+});
 
 // Export configuration
-window.appConfig = config;
+window.ENV = ENV;
+export default ENV;

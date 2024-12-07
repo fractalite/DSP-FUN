@@ -1,58 +1,88 @@
 class AIAssistant {
     constructor() {
-        // Check if API key is configured
-        if (!window.appConfig?.GROQ_API_KEY) {
-            console.warn('GROQ_API_KEY not found in config. AI features will be disabled.');
-        }
-        this.API_KEY = window.appConfig?.GROQ_API_KEY;
-        this.API_URL = window.appConfig?.GROQ_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
-        this.MODEL_ID = window.appConfig?.GROQ_MODEL_ID || 'llama-3.3-70b-versatile';
+        this.initialized = false;
+        this.backendUrl = this.getBackendUrl();
+        this.initPromise = this.init();
     }
 
-    async generateAffirmations(category, intention) {
-        // If no API key is configured, return null to trigger template fallback
-        if (!this.API_KEY) {
-            console.warn('No API key configured. Using template fallback.');
-            return null;
-        }
+    getBackendUrl() {
+        // Default to port 3001 for backend
+        return window.location.port === '5173' || window.location.port === '3006'
+            ? 'http://localhost:3001'
+            : 'http://localhost:3001';
+    }
 
-        const prompt = `Generate 5 powerful, personalized affirmations for the category "${category}" focused on the intention "${intention}". 
-        Make them empowering, positive, and in first person present tense.
-        Format each affirmation on a new line.
-        Keep them concise but impactful.`;
-
+    async init() {
         try {
-            const response = await fetch(this.API_URL, {
-                method: 'POST',
+            console.log('Initializing AI Assistant, fetching config from:', `${this.backendUrl}/api/config`);
+            
+            const response = await fetch(`${this.backendUrl}/api/config`, {
+                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${this.API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: this.MODEL_ID,
-                    messages: [
-                        {
-                            role: "user",
-                            content: prompt
-                        }
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 300
-                })
+                    'Accept': 'application/json'
+                }
             });
 
             if (!response.ok) {
-                throw new Error('AI API request failed');
+                const errorText = await response.text();
+                console.error('Config response not OK:', response.status, errorText);
+                throw new Error(`Failed to load configuration: ${response.status}`);
+            }
+
+            const config = await response.json();
+            console.log('Received config:', config);
+
+            if (!config.apiKeyExists) {
+                throw new Error('API key not configured on server');
+            }
+
+            this.MODEL_ID = config.modelId;
+            this.initialized = true;
+            console.log('AI Assistant successfully initialized');
+            return true;
+        } catch (error) {
+            console.error('Failed to initialize AI Assistant:', error);
+            throw error;
+        }
+    }
+
+    async generateAffirmations(intention) {
+        try {
+            await this.initPromise;
+
+            if (!this.initialized) {
+                throw new Error('AI Assistant not initialized');
+            }
+
+            console.log('Sending intention to server:', intention);
+
+            const response = await fetch(`${this.backendUrl}/api/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ intention })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to generate affirmations');
             }
 
             const data = await response.json();
-            return data.choices[0].message.content.trim();
+            console.log('Full server response:', JSON.stringify(data, null, 2));
+
+            if (!data.affirmations) {
+                throw new Error('No affirmations received from server');
+            }
+
+            return data;
         } catch (error) {
-            console.error('AI Generation Error:', error);
-            return null;
+            console.error('Error in AI Assistant:', error);
+            throw error;
         }
     }
 }
 
-// Export the class
-window.AIAssistant = AIAssistant;
+export default AIAssistant;
