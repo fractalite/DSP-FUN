@@ -135,8 +135,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedTrack) {
                 currentTrack = selectedTrack;
                 currentTrackIndex = trackList.findIndex(track => track.key === trackSelector.value);
-                audioPlayer.src = currentVersion === 'A' ? selectedTrack.versionA : selectedTrack.versionB;
+                const audioPath = currentVersion === 'A' ? selectedTrack.versionA : selectedTrack.versionB;
+                console.log('Loading audio track:', audioPath); // Debug log
+                audioPlayer.src = audioPath;
                 audioPlayer.load();
+                
+                // Add error event listener
+                audioPlayer.onerror = (e) => {
+                    console.error('Audio loading error:', audioPlayer.error);
+                };
             }
         });
     }
