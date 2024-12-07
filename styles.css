@@ -1581,3 +1581,68 @@ select, input[type="text"], textarea {
     color: var(--text-color);
     opacity: 0.8;
 }
+
+/* Offline mode styles */
+.offline {
+    position: relative;
+}
+
+.offline::after {
+    content: 'Offline Mode';
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background-color: #e24a7b;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    z-index: 1000;
+}
+
+.offline .network-dependent {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.offline .offline-message {
+    display: block;
+}
+
+.offline-message {
+    display: none;
+    background-color: rgba(226, 74, 123, 0.1);
+    border: 1px solid #e24a7b;
+    color: #e24a7b;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Offline fallback content */
+.offline-fallback {
+    display: none;
+}
+
+.offline .offline-fallback {
+    display: block;
+}
+
+/* Network status indicator */
+.network-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background-color: #4a90e2;
+    color: white;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.offline .network-status {
+    background-color: #e24a7b;
+}
