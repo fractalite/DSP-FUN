@@ -1646,3 +1646,54 @@ select, input[type="text"], textarea {
 .offline .network-status {
     background-color: #e24a7b;
 }
+
+/* Track loading indicator */
+.track-loading {
+    position: relative;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.track-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 2px solid transparent;
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.track-preloading {
+    position: relative;
+}
+
+.track-preloading::before {
+    content: '↻';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 12px;
+    color: var(--accent-color);
+    opacity: 0.7;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Track status indicators */
+.track-status {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8em;
+    color: var(--text-color);
+    opacity: 0.7;
+}
