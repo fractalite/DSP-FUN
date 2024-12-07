@@ -5,16 +5,19 @@ const ENV = {
     GROQ_API_URL: window.__GROQ_API_URL__ || 'https://api.groq.com/openai/v1/chat/completions',
     GROQ_MODEL_ID: window.__GROQ_MODEL_ID__ || 'llama-3.3-70b-versatile',
     
-    // Backend URL
+    // Backend URL - using Netlify Functions
     BACKEND_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3001'
-        : 'https://deepr-love-backend.netlify.app',
+        : 'https://api.deepr.love',
     
     // Feature flags
     ENABLE_AI: window.__ENABLE_AI__ !== 'false' && !!window.__GROQ_API_KEY__,
     ENABLE_VOICE_RECORDING: true,
     ENABLE_BINAURAL_BEATS: true,
-    ENABLE_AFFIRMATIONS: true
+    ENABLE_AFFIRMATIONS: true,
+    
+    // Environment
+    IS_PRODUCTION: window.location.hostname === 'deepr.love'
 };
 
 // Log configuration status
@@ -24,7 +27,9 @@ console.log('Config initialized:', {
     API_URL: ENV.GROQ_API_URL,
     MODEL_ID: ENV.GROQ_MODEL_ID,
     ENABLE_AI: ENV.ENABLE_AI,
-    BACKEND_URL: ENV.BACKEND_URL
+    BACKEND_URL: ENV.BACKEND_URL,
+    IS_PRODUCTION: ENV.IS_PRODUCTION,
+    HOSTNAME: window.location.hostname
 });
 
 // Export configuration
