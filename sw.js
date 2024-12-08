@@ -69,10 +69,17 @@ self.addEventListener('fetch', event => {
         // Try the network first
         const networkResponse = await fetch(event.request);
         
-        // Cache successful GET requests
-        if (event.request.method === 'GET') {
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(event.request, networkResponse.clone());
+        // Cache successful GET requests, but skip partial responses
+        if (event.request.method === 'GET' && networkResponse.status === 200) {
+            // Don't cache audio files that might be served partially
+            if (!event.request.url.endsWith('.mp3') && !event.request.url.endsWith('.wav')) {
+                const cache = await caches.open(CACHE_NAME);
+                try {
+                    await cache.put(event.request, networkResponse.clone());
+                } catch (e) {
+                    console.warn('Failed to cache response:', e);
+                }
+            }
         }
         
         return networkResponse;

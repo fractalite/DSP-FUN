@@ -57,11 +57,20 @@ class AIAssistant {
                 body: JSON.stringify({ intention })
             });
 
+            const result = await response.json();
+            
             if (!response.ok) {
-                throw new Error(`Generation failed: ${response.status}`);
+                if (response.status === 429) {
+                    return {
+                        success: false,
+                        error: 'Rate limit exceeded. Please try again in about an hour.',
+                        retryAfter: result.retryAfter,
+                        affirmations: []
+                    };
+                }
+                throw new Error(result.error || `Generation failed: ${response.status}`);
             }
 
-            const result = await response.json();
             return {
                 success: true,
                 affirmations: result.affirmations || []
@@ -70,7 +79,7 @@ class AIAssistant {
             console.error('Failed to generate affirmations:', error);
             return {
                 success: false,
-                message: 'Failed to generate affirmations. Please try again.',
+                error: error.message || 'Failed to generate affirmations. Please try again.',
                 affirmations: []
             };
         }
