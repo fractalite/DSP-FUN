@@ -3,18 +3,39 @@ import { AudioOptimizer } from './js/utils/audioOptimizer.js';
 class AudioTrackManager {
     constructor() {
         this.audioOptimizer = new AudioOptimizer();
-        this.audioContext = this.audioOptimizer.audioContext;
         this.tracks = new Map();
         this.loadingTracks = new Set();
         this.preloadingTracks = new Set();
-        this.masterGain = this.audioContext.createGain();
-        this.masterGain.connect(this.audioContext.destination);
+        this.masterGain = null;
         this.currentTrack = null;
         this.isFlowMode = false;
         this.playedTracks = new Set();
+        
+        // Initialize audio context after user interaction
+        this.initPromise = this.initialize();
+    }
+
+    async initialize() {
+        try {
+            // Wait for AudioOptimizer to be ready
+            await this.audioOptimizer.initialize();
+            
+            // Now we can safely use the audio context
+            this.audioContext = this.audioOptimizer.audioContext;
+            this.masterGain = this.audioContext.createGain();
+            this.masterGain.connect(this.audioContext.destination);
+            
+            console.debug('AudioTrackManager: Initialized successfully');
+        } catch (error) {
+            console.error('AudioTrackManager: Failed to initialize:', error);
+            throw error;
+        }
     }
 
     async loadTrack(url, trackId, showLoading = true) {
+        // Ensure we're initialized
+        await this.initPromise;
+        
         if (this.tracks.has(trackId)) {
             return this.tracks.get(trackId);
         }
@@ -119,6 +140,9 @@ class AudioTrackManager {
         }
 
         try {
+            // Ensure we're initialized
+            await this.initPromise;
+
             // Load the track if not already loaded
             if (!this.tracks.has(trackId)) {
                 const trackUrl = window.audioTracks[trackId].versionA || window.audioTracks[trackId].versionB;
