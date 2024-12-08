@@ -1,22 +1,9 @@
-const CACHE_NAME = 'deepr-love-cache-v2';
-const OFFLINE_URL = '/offline.html';
-
-// Comprehensive resource list
-const STATIC_RESOURCES = [
-  '/',
-  '/index.html',
-  '/offline.html',
-  '/assets/Logo.png',
-  '/assets/favicon.svg'
-];
-
-// Expanded font domains and resources
-const FONT_RESOURCES = [
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com'
-];
-
+// Add diagnostic logging at the top of the file
 self.addEventListener('install', (event) => {
+  console.log('🔧 [ServiceWorker] DIAGNOSTIC: Installation started', {
+    timestamp: new Date().toISOString(),
+    cacheVersion: CACHE_NAME
+  });
   console.log('[ServiceWorker] Install');
   event.waitUntil(
     (async () => {
@@ -32,6 +19,10 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+  console.log('🟢 [ServiceWorker] DIAGNOSTIC: Activation started', {
+    timestamp: new Date().toISOString(),
+    cacheVersion: CACHE_NAME
+  });
   console.log('[ServiceWorker] Activate');
   event.waitUntil(
     (async () => {
@@ -51,9 +42,16 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Wrap existing fetch event listener with comprehensive logging
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
+  console.log('🌐 [ServiceWorker] DIAGNOSTIC: Fetch intercepted', {
+    url: url.href,
+    method: event.request.method,
+    timestamp: new Date().toISOString()
+  });
+
   // Special handling for font resources
   if (FONT_RESOURCES.some(resource => url.href.startsWith(resource))) {
     event.respondWith(
@@ -133,3 +131,21 @@ self.addEventListener('push', event => {
     self.registration.showNotification('deepr.love', options)
   );
 });
+
+const CACHE_NAME = 'deepr-love-cache-v2';
+const OFFLINE_URL = '/offline.html';
+
+// Comprehensive resource list
+const STATIC_RESOURCES = [
+  '/',
+  '/index.html',
+  '/offline.html',
+  '/assets/Logo.png',
+  '/assets/favicon.svg'
+];
+
+// Expanded font domains and resources
+const FONT_RESOURCES = [
+  'https://fonts.googleapis.com',
+  'https://fonts.gstatic.com'
+];
