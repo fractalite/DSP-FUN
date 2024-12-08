@@ -81,15 +81,15 @@ class AffirmationGenerator {
         try {
             const result = await this.aiAssistant.generateAffirmations(intention);
             
-            if (!result.success) {
+            if (!result?.success || !Array.isArray(result.affirmations)) {
                 this.affirmationDisplay.innerHTML = `
-                    <p class="error">${result.message || 'Unable to generate affirmations at this time.'}</p>
+                    <p class="error">${result?.error || 'Unable to generate affirmations at this time.'}</p>
                     <p>You can still write your own affirmations in the text area below.</p>
                 `;
                 return;
             }
 
-            if (!result.affirmations || result.affirmations.length === 0) {
+            if (result.affirmations.length === 0) {
                 this.affirmationDisplay.innerHTML = `
                     <p class="error">No affirmations were generated. Please try again with a different intention.</p>
                 `;
@@ -97,7 +97,7 @@ class AffirmationGenerator {
             }
 
             const affirmationsHtml = result.affirmations
-                .map(affirmation => `<p class="affirmation">${affirmation}</p>`)
+                .map((affirmation, index) => `<p class="affirmation">${index + 1}. ${affirmation}</p>`)
                 .join('');
 
             this.affirmationDisplay.innerHTML = `
