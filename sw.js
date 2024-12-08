@@ -10,10 +10,10 @@ const STATIC_RESOURCES = [
   '/assets/favicon.svg'
 ];
 
-// Font URLs to cache
-const FONT_URLS = [
-  'https://fonts.googleapis.com/css2',
-  'https://fonts.gstatic.com'
+// Font domains to handle
+const FONT_DOMAINS = [
+  'fonts.googleapis.com',
+  'fonts.gstatic.com'
 ];
 
 self.addEventListener('install', (event) => {
@@ -47,44 +47,86 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin) && 
-      !FONT_URLS.some(url => event.request.url.startsWith(url))) {
-    return;
-  }
-
-  // Network-first strategy for API calls
-  if (event.request.url.includes('/.netlify/functions/')) {
+  const url = new URL(event.request.url);
+  console.log('[ServiceWorker] Fetch:', url.pathname);
+  
+  // Handle font requests
+  if (FONT_DOMAINS.some(domain => url.hostname === domain)) {
+    console.log('[ServiceWorker] Font request:', url.pathname);
     event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
+      (async () => {
+        try {
+          // Try cache first for fonts
+          const cachedResponse = await caches.match(event.request);
+          if (cachedResponse) {
+            console.log('[ServiceWorker] Font from cache:', url.pathname);
+            return cachedResponse;
+          }
+
+          console.log('[ServiceWorker] Fetching font from network:', url.pathname);
+          // If not in cache, fetch from network
+          const response = await fetch(event.request.clone(), {
+            mode: 'cors',
+            credentials: 'omit'
+          });
+          
+          // Cache successful responses
+          if (response.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(event.request, response.clone());
+            console.log('[ServiceWorker] Cached font:', url.pathname);
+          } else {
+            console.warn('[ServiceWorker] Bad font response:', response.status, url.pathname);
+          }
+          
+          return response;
+        } catch (error) {
+          console.error('[ServiceWorker] Font fetch failed:', url.pathname, error);
+          throw error;
+        }
+      })()
     );
     return;
   }
 
-  // Cache-first strategy for static assets and fonts
+  // Handle API requests
+  if (url.pathname.includes('/.netlify/functions/')) {
+    console.log('[ServiceWorker] API request:', url.pathname);
+    event.respondWith(
+      fetch(event.request)
+        .catch(error => {
+          console.error('[ServiceWorker] API fetch failed:', url.pathname, error);
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // Handle all other requests
   event.respondWith(
     (async () => {
       try {
         // Try cache first
         const cachedResponse = await caches.match(event.request);
         if (cachedResponse) {
-          console.log('[ServiceWorker] Return from cache:', event.request.url);
+          console.log('[ServiceWorker] From cache:', url.pathname);
           return cachedResponse;
         }
 
         // If not in cache, try network
+        console.log('[ServiceWorker] Fetching from network:', url.pathname);
         const response = await fetch(event.request);
         
         // Cache successful responses
         if (response.ok) {
           const cache = await caches.open(CACHE_NAME);
-          cache.put(event.request, response.clone());
+          await cache.put(event.request, response.clone());
+          console.log('[ServiceWorker] Cached:', url.pathname);
         }
         
         return response;
       } catch (error) {
-        console.log('[ServiceWorker] Fetch failed, serving offline page');
+        console.error('[ServiceWorker] Fetch failed:', url.pathname, error);
         
         // If it's a page navigation, show offline page
         if (event.request.mode === 'navigate') {
