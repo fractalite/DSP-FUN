@@ -6,13 +6,10 @@ const PRECACHE_RESOURCES = [
   '/',
   '/index.html',
   '/styles.css',
-  '/js/utils/retryUtils.js',
-  '/js/services/affirmationService.js',
-  '/voice-enhancer.js',
-  '/voice-recording.js',
-  '/session-tracker.js',
+  '/ai-integration.js',
+  '/affirmation-system.js',
+  '/audio-optimizer.js',
   '/audio-tracks.js',
-  '/assets/favicon.svg',
   '/assets/Logo.png',
   OFFLINE_URL
 ];
