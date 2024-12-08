@@ -6,6 +6,11 @@ export default defineConfig(({ command, mode }) => {
   
   return {
     base: '/',
+    define: {
+      'window.__GROQ_API_KEY__': JSON.stringify(env.VITE_GROQ_API_KEY || ''),
+      'window.__GROQ_MODEL_ID__': JSON.stringify(env.VITE_GROQ_MODEL_ID || ''),
+      'window.__ENABLE_AI__': JSON.stringify(env.VITE_ENABLE_AI === 'true')
+    },
     server: {
       port: 4000,
       strictPort: true,
