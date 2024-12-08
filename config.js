@@ -3,12 +3,12 @@ const ENV = {
     // API Configuration
     API_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3001/api'
-        : 'https://api.deepr.love/api',
+        : '/.netlify/functions/api',
     
     // Backend URL - using Netlify Functions
     BACKEND_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:9999'
-        : 'https://api.deepr.love',
+        : '',
     
     // Feature flags
     ENABLE_AI: window.__ENABLE_AI__ !== 'false',
