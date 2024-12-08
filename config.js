@@ -7,7 +7,7 @@ const ENV = {
     
     // Backend URL - using Netlify Functions
     BACKEND_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3001'
+        ? 'http://localhost:9999'
         : 'https://api.deepr.love',
     
     // Feature flags
