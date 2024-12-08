@@ -8,104 +8,105 @@ const PRECACHE_RESOURCES = [
   '/styles.css',
   '/ai-integration.js',
   '/affirmation-system.js',
-  '/audio-optimizer.js',
-  '/audio-tracks.js',
+  '/audioOptimizer.js',
+  '/config.js',
   '/assets/Logo.png',
   OFFLINE_URL
 ];
 
 // Install event - pre-cache resources
 self.addEventListener('install', event => {
+  console.log('[ServiceWorker] Install');
   event.waitUntil(
     (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      // Pre-cache offline page and essential resources
-      await cache.addAll(PRECACHE_RESOURCES);
-      // Force service worker to become active
-      await self.skipWaiting();
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        console.log('[ServiceWorker] Caching app shell');
+        await cache.addAll(PRECACHE_RESOURCES);
+        console.log('[ServiceWorker] Cache populated');
+      } catch (error) {
+        console.error('[ServiceWorker] Install failed:', error);
+      }
     })()
   );
+  self.skipWaiting();
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
+  console.log('[ServiceWorker] Activate');
   event.waitUntil(
     (async () => {
-      // Enable navigation preload if supported
-      if (self.registration.navigationPreload) {
-        await self.registration.navigationPreload.enable();
+      try {
+        // Get all cache keys
+        const cacheKeys = await caches.keys();
+        
+        // Delete old caches
+        await Promise.all(
+          cacheKeys
+            .filter(key => key !== CACHE_NAME)
+            .map(key => {
+              console.log('[ServiceWorker] Removing old cache', key);
+              return caches.delete(key);
+            })
+        );
+        
+        console.log('[ServiceWorker] Claiming clients');
+        await clients.claim();
+      } catch (error) {
+        console.error('[ServiceWorker] Activate failed:', error);
       }
-
-      // Remove old caches
-      const cacheKeys = await caches.keys();
-      await Promise.all(
-        cacheKeys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-
-      // Take control of all pages immediately
-      await self.clients.claim();
     })()
   );
 });
 
-// Fetch event - handle offline functionality
+// Fetch event - serve from cache, falling back to network
 self.addEventListener('fetch', event => {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') return;
+
+  // Skip browser-sync requests in development
+  if (event.request.url.includes('browser-sync')) return;
+
+  // Skip Netlify function calls
+  if (event.request.url.includes('/.netlify/functions/')) return;
+
   event.respondWith(
     (async () => {
       try {
-        // Try to use navigation preload response if available
-        const preloadResponse = await event.preloadResponse;
-        if (preloadResponse) {
-          return preloadResponse;
-        }
-
-        // Try the network first
-        const networkResponse = await fetch(event.request);
-        
-        // Cache successful GET requests, but skip partial responses
-        if (event.request.method === 'GET' && networkResponse.status === 200) {
-            // Don't cache audio files that might be served partially
-            if (!event.request.url.endsWith('.mp3') && !event.request.url.endsWith('.wav')) {
-                const cache = await caches.open(CACHE_NAME);
-                try {
-                    await cache.put(event.request, networkResponse.clone());
-                } catch (e) {
-                    console.warn('Failed to cache response:', e);
-                }
-            }
-        }
-        
-        return networkResponse;
-      } catch (error) {
+        // Try to get from cache first
         const cache = await caches.open(CACHE_NAME);
-        
-        // Check if the request is for an API endpoint
-        if (event.request.url.includes('/api/')) {
-          // For API requests, return a custom offline response
-          return new Response(
-            JSON.stringify({
-              error: 'offline',
-              message: 'You are currently offline'
-            }),
-            {
-              status: 503,
-              headers: { 'Content-Type': 'application/json' }
-            }
-          );
-        }
-
-        // Try to get the resource from cache
         const cachedResponse = await cache.match(event.request);
+        
         if (cachedResponse) {
+          console.log('[ServiceWorker] Return from cache:', event.request.url);
           return cachedResponse;
         }
 
-        // If resource not in cache, show offline page
-        return cache.match(OFFLINE_URL);
+        try {
+          // If not in cache, try network
+          const networkResponse = await fetch(event.request);
+          
+          // Cache successful responses
+          if (networkResponse.ok) {
+            console.log('[ServiceWorker] Caching new resource:', event.request.url);
+            await cache.put(event.request, networkResponse.clone());
+          }
+          
+          return networkResponse;
+        } catch (fetchError) {
+          console.log('[ServiceWorker] Fetch failed, serving offline page');
+          
+          // If offline and requesting a page, show offline page
+          if (event.request.mode === 'navigate') {
+            return cache.match(OFFLINE_URL);
+          }
+          
+          throw fetchError;
+        }
+      } catch (error) {
+        console.error('[ServiceWorker] Fetch handler failed:', error);
+        throw error;
       }
     })()
   );

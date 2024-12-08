@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { loadEnv } from 'vite'
+import { resolve } from 'path'
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -26,7 +27,23 @@ export default defineConfig(({ command, mode }) => {
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
-      sourcemap: true
+      sourcemap: true,
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+          sw: resolve(__dirname, 'sw.js'),
+          offline: resolve(__dirname, 'offline.html')
+        }
+      },
+      // Ensure service worker and other assets are copied to build
+      assetsInclude: ['**/*.js', '**/*.html', 'assets/**'],
+      rollupOptions: {
+        output: {
+          entryFileNames: (chunkInfo) => {
+            return chunkInfo.name === 'sw' ? '[name].js' : 'assets/[name]-[hash].js'
+          }
+        }
+      }
     }
   }
 })
