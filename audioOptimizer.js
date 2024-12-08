@@ -30,33 +30,40 @@ class AudioOptimizer {
     }
 
     setupInteractionListeners() {
-        const interactions = ['click', 'touchstart', 'keydown', 'pointerdown', 'mousedown'];
-        
-        const handler = (event) => {
-            // Only process if it's a direct user interaction
-            if (event.isTrusted && !this.userInteractionReceived) {
-                this.userInteractionReceived = true;
-                this.metrics.userInteractions++;
-                console.debug('AudioOptimizer: User interaction received, type:', event.type);
-                
-                // Initialize in a separate microtask to ensure it's after the event
-                queueMicrotask(async () => {
-                    try {
-                        await this.initialize();
-                    } catch (error) {
-                        console.error('AudioOptimizer: Failed to initialize after user interaction:', error);
-                    }
-                });
-            }
-        };
+        const interactionEvents = [
+            'click', 'touchstart', 'keydown', 
+            'mousedown', 'pointerdown', 
+            'play', 'pause', 'volumechange'
+        ];
 
-        // Add listeners with capture to ensure we get the event first
-        interactions.forEach(event => {
-            document.addEventListener(event, handler, { capture: true, passive: true });
+        interactionEvents.forEach(eventType => {
+            document.addEventListener(eventType, this.handleUserInteraction, { 
+                once: false,  // Keep listener active
+                passive: true 
+            });
         });
+
+        console.debug('AudioOptimizer: Interaction listeners setup complete');
+    }
+
+    async handleUserInteraction(event) {
+        this.metrics.userInteractions++;
         
-        // Also listen for play events on audio/video elements
-        document.addEventListener('play', handler, { capture: true, passive: true });
+        if (!this.userInteractionReceived) {
+            console.debug('AudioOptimizer: First user interaction detected', {
+                eventType: event.type,
+                timestamp: new Date().toISOString()
+            });
+
+            this.userInteractionReceived = true;
+            
+            try {
+                await this.initialize();
+            } catch (error) {
+                console.error('AudioOptimizer: Initialization failed after user interaction', error);
+                this.handleError(error);
+            }
+        }
     }
 
     async initialize() {
