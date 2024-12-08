@@ -28,21 +28,29 @@ export default defineConfig(({ command, mode }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: true,
+      // Ensure service worker and static files are copied
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),
-          sw: resolve(__dirname, 'sw.js'),
-          offline: resolve(__dirname, 'offline.html')
-        }
-      },
-      // Ensure service worker and other assets are copied to build
-      assetsInclude: ['**/*.js', '**/*.html', 'assets/**'],
-      rollupOptions: {
+          sw: resolve(__dirname, 'sw.js')
+        },
         output: {
           entryFileNames: (chunkInfo) => {
             return chunkInfo.name === 'sw' ? '[name].js' : 'assets/[name]-[hash].js'
           }
         }
+      },
+      // Copy service worker and other static files
+      copyPublicDir: true
+    },
+    // Ensure service worker is copied to build directory
+    publicDir: 'public',
+    experimental: {
+      renderBuiltUrl(filename, { hostType, type }) {
+        if (filename.includes('sw.js')) {
+          return { relative: true, runtime: filename }
+        }
+        return filename
       }
     }
   }

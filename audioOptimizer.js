@@ -30,29 +30,33 @@ class AudioOptimizer {
     }
 
     setupInteractionListeners() {
-        const interactions = ['click', 'touchstart', 'keydown'];
+        const interactions = ['click', 'touchstart', 'keydown', 'pointerdown', 'mousedown'];
         
-        const handler = async (event) => {
+        const handler = (event) => {
             // Only process if it's a direct user interaction
             if (event.isTrusted && !this.userInteractionReceived) {
                 this.userInteractionReceived = true;
                 this.metrics.userInteractions++;
-                console.debug('AudioOptimizer: User interaction received');
+                console.debug('AudioOptimizer: User interaction received, type:', event.type);
                 
-                try {
-                    await this.initialize();
-                } catch (error) {
-                    console.error('AudioOptimizer: Failed to initialize after user interaction:', error);
-                }
+                // Initialize in a separate microtask to ensure it's after the event
+                queueMicrotask(async () => {
+                    try {
+                        await this.initialize();
+                    } catch (error) {
+                        console.error('AudioOptimizer: Failed to initialize after user interaction:', error);
+                    }
+                });
             }
         };
 
+        // Add listeners with capture to ensure we get the event first
         interactions.forEach(event => {
-            document.addEventListener(event, handler, { once: false });
+            document.addEventListener(event, handler, { capture: true, passive: true });
         });
-
-        // Store handlers for cleanup
-        this.handlers = interactions.map(event => ({ event, handler }));
+        
+        // Also listen for play events on audio/video elements
+        document.addEventListener('play', handler, { capture: true, passive: true });
     }
 
     async initialize() {
@@ -69,7 +73,7 @@ class AudioOptimizer {
         // Create promise only once
         if (!this.initializationPromise) {
             console.debug('AudioOptimizer: Starting initialization');
-            this.initializationPromise = new Promise(async (resolve) => {
+            this.initializationPromise = new Promise(async (resolve, reject) => {
                 try {
                     this.metrics.initAttempts++;
                     this.metrics.lastInitAttempt = Date.now();
@@ -81,9 +85,14 @@ class AudioOptimizer {
 
                     // Ensure context is running
                     if (this.audioContext.state !== 'running') {
-                        console.debug('AudioOptimizer: Resuming AudioContext');
+                        console.debug('AudioOptimizer: Resuming AudioContext, current state:', this.audioContext.state);
                         this.metrics.resumeAttempts++;
                         await this.audioContext.resume();
+                        
+                        // Double-check the state after resume
+                        if (this.audioContext.state !== 'running') {
+                            throw new Error(`AudioContext failed to enter running state: ${this.audioContext.state}`);
+                        }
                     }
 
                     this.initialized = true;
@@ -101,7 +110,7 @@ class AudioOptimizer {
                         setTimeout(() => this.initialize(), delay);
                     } else {
                         console.error('AudioOptimizer: Max retry attempts reached');
-                        resolve(); // Resolve anyway to prevent hanging
+                        reject(error); // Reject instead of resolving to indicate failure
                     }
                 }
             });

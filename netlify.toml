@@ -17,7 +17,7 @@
   [headers.values]
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; connect-src 'self' https://*.netlify.app wss://*.netlify.app /.netlify/functions/*; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://app.netlify.com https://*.netlify.app; frame-ancestors https://app.netlify.com https://*.netlify.app; worker-src 'self' blob:; media-src 'self' blob:"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; connect-src 'self' https://*.netlify.app wss://*.netlify.app https://*.netlify.app/.netlify/functions/; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://app.netlify.com https://*.netlify.app; frame-ancestors https://app.netlify.com https://*.netlify.app; worker-src 'self' blob:; media-src 'self' blob:"
 
 # API redirect
 [[redirects]]
