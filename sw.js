@@ -1,111 +1,97 @@
-const CACHE_NAME = 'deepr-love-v1';
+const CACHE_NAME = 'deepr-love-cache-v1';
 const OFFLINE_URL = '/offline.html';
 
-// Resources to pre-cache
-const PRECACHE_RESOURCES = [
+// Resources to cache
+const STATIC_RESOURCES = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/ai-integration.js',
-  '/affirmation-system.js',
-  '/audioOptimizer.js',
-  '/config.js',
+  '/offline.html',
   '/assets/Logo.png',
-  OFFLINE_URL
+  '/assets/favicon.svg'
 ];
 
-// Install event - pre-cache resources
-self.addEventListener('install', event => {
+// Font URLs to cache
+const FONT_URLS = [
+  'https://fonts.googleapis.com/css2',
+  'https://fonts.gstatic.com'
+];
+
+self.addEventListener('install', (event) => {
   console.log('[ServiceWorker] Install');
   event.waitUntil(
     (async () => {
-      try {
-        const cache = await caches.open(CACHE_NAME);
-        console.log('[ServiceWorker] Caching app shell');
-        await cache.addAll(PRECACHE_RESOURCES);
-        console.log('[ServiceWorker] Cache populated');
-      } catch (error) {
-        console.error('[ServiceWorker] Install failed:', error);
-      }
+      console.log('[ServiceWorker] Caching app shell');
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(STATIC_RESOURCES);
+      console.log('[ServiceWorker] Cache populated');
     })()
   );
-  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   console.log('[ServiceWorker] Activate');
   event.waitUntil(
     (async () => {
-      try {
-        // Get all cache keys
-        const cacheKeys = await caches.keys();
-        
-        // Delete old caches
-        await Promise.all(
-          cacheKeys
-            .filter(key => key !== CACHE_NAME)
-            .map(key => {
-              console.log('[ServiceWorker] Removing old cache', key);
-              return caches.delete(key);
-            })
-        );
-        
-        console.log('[ServiceWorker] Claiming clients');
-        await clients.claim();
-      } catch (error) {
-        console.error('[ServiceWorker] Activate failed:', error);
-      }
+      // Clean up old caches
+      const cacheKeys = await caches.keys();
+      await Promise.all(
+        cacheKeys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      );
+      
+      console.log('[ServiceWorker] Claiming clients');
+      await self.clients.claim();
     })()
   );
 });
 
-// Fetch event - serve from cache, falling back to network
-self.addEventListener('fetch', event => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
+self.addEventListener('fetch', (event) => {
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin) && 
+      !FONT_URLS.some(url => event.request.url.startsWith(url))) {
+    return;
+  }
 
-  // Skip browser-sync requests in development
-  if (event.request.url.includes('browser-sync')) return;
+  // Network-first strategy for API calls
+  if (event.request.url.includes('/.netlify/functions/')) {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
-  // Skip Netlify function calls
-  if (event.request.url.includes('/.netlify/functions/')) return;
-
+  // Cache-first strategy for static assets and fonts
   event.respondWith(
     (async () => {
       try {
-        // Try to get from cache first
-        const cache = await caches.open(CACHE_NAME);
-        const cachedResponse = await cache.match(event.request);
-        
+        // Try cache first
+        const cachedResponse = await caches.match(event.request);
         if (cachedResponse) {
           console.log('[ServiceWorker] Return from cache:', event.request.url);
           return cachedResponse;
         }
 
-        try {
-          // If not in cache, try network
-          const networkResponse = await fetch(event.request);
-          
-          // Cache successful responses
-          if (networkResponse.ok) {
-            console.log('[ServiceWorker] Caching new resource:', event.request.url);
-            await cache.put(event.request, networkResponse.clone());
-          }
-          
-          return networkResponse;
-        } catch (fetchError) {
-          console.log('[ServiceWorker] Fetch failed, serving offline page');
-          
-          // If offline and requesting a page, show offline page
-          if (event.request.mode === 'navigate') {
-            return cache.match(OFFLINE_URL);
-          }
-          
-          throw fetchError;
+        // If not in cache, try network
+        const response = await fetch(event.request);
+        
+        // Cache successful responses
+        if (response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, response.clone());
         }
+        
+        return response;
       } catch (error) {
-        console.error('[ServiceWorker] Fetch handler failed:', error);
+        console.log('[ServiceWorker] Fetch failed, serving offline page');
+        
+        // If it's a page navigation, show offline page
+        if (event.request.mode === 'navigate') {
+          const cache = await caches.open(CACHE_NAME);
+          return cache.match(OFFLINE_URL);
+        }
+        
         throw error;
       }
     })()

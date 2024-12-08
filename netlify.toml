@@ -11,13 +11,25 @@
     Cache-Control = "no-cache"
     # Specific CSP for service worker
     Content-Security-Policy = "default-src 'self'; script-src 'self'"
+    Service-Worker-Allowed = "/"
 
 [[headers]]
   for = "/*"
   [headers.values]
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; connect-src 'self' https://*.netlify.app wss://*.netlify.app https://*.netlify.app/.netlify/functions/; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://app.netlify.com https://*.netlify.app; frame-ancestors https://app.netlify.com https://*.netlify.app; worker-src 'self' blob:; media-src 'self' blob:"
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;
+      connect-src 'self' https://*.netlify.app wss://*.netlify.app https://*.netlify.app/.netlify/functions/ https://fonts.googleapis.com https://fonts.gstatic.com;
+      font-src 'self' https://fonts.gstatic.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      frame-src https://app.netlify.com https://*.netlify.app;
+      frame-ancestors https://app.netlify.com https://*.netlify.app;
+      worker-src 'self' blob:;
+      media-src 'self' blob:;
+      img-src 'self' data: https://*.netlify.app https://fonts.gstatic.com
+    """
 
 # API redirect
 [[redirects]]
@@ -30,8 +42,16 @@
   from = "/sw.js"
   to = "/sw.js"
   status = 200
+  force = true
 
-# Catch-all redirect for SPA
+# Ensure service worker is served with correct content type
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript"
+    Service-Worker-Allowed = "/"
+
+# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
