@@ -1,6 +1,7 @@
-const CACHE_NAME = 'deepr-love-cache-v3';
+const CACHE_NAME = 'deepr-love-cache-v1';
 const OFFLINE_URL = '/offline.html';
 
+// Resources to cache
 const STATIC_RESOURCES = [
   '/',
   '/index.html',
@@ -9,55 +10,90 @@ const STATIC_RESOURCES = [
   '/assets/favicon.svg'
 ];
 
-const FONT_RESOURCES = [
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com'
+// Font domains to handle
+const FONT_DOMAINS = [
+  'fonts.googleapis.com',
+  'fonts.gstatic.com'
 ];
 
 self.addEventListener('install', (event) => {
+  console.log('[ServiceWorker] Install');
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => 
-      cache.addAll(STATIC_RESOURCES)
-    )
+    (async () => {
+      console.log('[ServiceWorker] Caching app shell');
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(STATIC_RESOURCES);
+      console.log('[ServiceWorker] Cache populated');
+    })()
   );
 });
 
 self.addEventListener('activate', (event) => {
+  console.log('[ServiceWorker] Activate');
   event.waitUntil(
-    caches.keys().then(cacheNames => 
-      Promise.all(
-        cacheNames
-          .filter(name => name !== CACHE_NAME)
-          .map(name => caches.delete(name))
-      )
-    )
+    (async () => {
+      // Clean up old caches
+      const cacheKeys = await caches.keys();
+      await Promise.all(
+        cacheKeys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      );
+      
+      console.log('[ServiceWorker] Claiming clients');
+      await self.clients.claim();
+    })()
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin) && 
+      !FONT_DOMAINS.some(url => event.request.url.startsWith(url))) {
+    return;
+  }
 
-  // Special handling for font resources
-  if (FONT_RESOURCES.some(resource => url.href.startsWith(resource))) {
+  // Network-first strategy for API calls
+  if (event.request.url.includes('/.netlify/functions/')) {
     event.respondWith(
-      caches.match(event.request).then(response => {
-        return response || fetch(event.request).then(networkResponse => {
-          if (networkResponse.ok) {
-            caches.open(CACHE_NAME).then(cache => 
-              cache.put(event.request, networkResponse.clone())
-            );
-          }
-          return networkResponse;
-        });
-      })
+      fetch(event.request)
+        .catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // Default fetch strategy
+  // Cache-first strategy for static assets and fonts
   event.respondWith(
-    caches.match(event.request).then(response => 
-      response || fetch(event.request)
-    )
+    (async () => {
+      try {
+        // Try cache first
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          console.log('[ServiceWorker] Return from cache:', event.request.url);
+          return cachedResponse;
+        }
+
+        // If not in cache, try network
+        const response = await fetch(event.request);
+        
+        // Cache successful responses
+        if (response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, response.clone());
+        }
+        
+        return response;
+      } catch (error) {
+        console.log('[ServiceWorker] Fetch failed, serving offline page');
+        
+        // If it's a page navigation, show offline page
+        if (event.request.mode === 'navigate') {
+          const cache = await caches.open(CACHE_NAME);
+          return cache.match(OFFLINE_URL);
+        }
+        
+        throw error;
+      }
+    })()
   );
 });
