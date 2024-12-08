@@ -1,132 +1,99 @@
-const CACHE_NAME = 'deepr-love-v1';
+const CACHE_NAME = 'deepr-love-cache-v1';
 const OFFLINE_URL = '/offline.html';
 
-// Resources to pre-cache
-const PRECACHE_RESOURCES = [
+// Resources to cache
+const STATIC_RESOURCES = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/ai-integration.js',
-  '/affirmation-system.js',
-  '/audio-optimizer.js',
-  '/audio-tracks.js',
+  '/offline.html',
   '/assets/Logo.png',
-  OFFLINE_URL
+  '/assets/favicon.svg'
 ];
 
-// Install event - pre-cache resources
-self.addEventListener('install', event => {
+// Font domains to handle
+const FONT_DOMAINS = [
+  'fonts.googleapis.com',
+  'fonts.gstatic.com'
+];
+
+self.addEventListener('install', (event) => {
+  console.log('[ServiceWorker] Install');
   event.waitUntil(
     (async () => {
+      console.log('[ServiceWorker] Caching app shell');
       const cache = await caches.open(CACHE_NAME);
-      // Pre-cache offline page and essential resources
-      await cache.addAll(PRECACHE_RESOURCES);
-      // Force service worker to become active
-      await self.skipWaiting();
+      await cache.addAll(STATIC_RESOURCES);
+      console.log('[ServiceWorker] Cache populated');
     })()
   );
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
+  console.log('[ServiceWorker] Activate');
   event.waitUntil(
     (async () => {
-      // Enable navigation preload if supported
-      if (self.registration.navigationPreload) {
-        await self.registration.navigationPreload.enable();
-      }
-
-      // Remove old caches
+      // Clean up old caches
       const cacheKeys = await caches.keys();
       await Promise.all(
-        cacheKeys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+        cacheKeys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
       );
-
-      // Take control of all pages immediately
+      
+      console.log('[ServiceWorker] Claiming clients');
       await self.clients.claim();
     })()
   );
 });
 
-// Fetch event - handle offline functionality
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin) && 
+      !FONT_DOMAINS.some(url => event.request.url.startsWith(url))) {
+    return;
+  }
+
+  // Network-first strategy for API calls
+  if (event.request.url.includes('/.netlify/functions/')) {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first strategy for static assets and fonts
   event.respondWith(
     (async () => {
       try {
-        // Try to use navigation preload response if available
-        const preloadResponse = await event.preloadResponse;
-        if (preloadResponse) {
-          return preloadResponse;
-        }
-
-        // Try the network first
-        const networkResponse = await fetch(event.request);
-        
-        // Cache successful GET requests, but skip partial responses
-        if (event.request.method === 'GET' && networkResponse.status === 200) {
-            // Don't cache audio files that might be served partially
-            if (!event.request.url.endsWith('.mp3') && !event.request.url.endsWith('.wav')) {
-                const cache = await caches.open(CACHE_NAME);
-                try {
-                    await cache.put(event.request, networkResponse.clone());
-                } catch (e) {
-                    console.warn('Failed to cache response:', e);
-                }
-            }
-        }
-        
-        return networkResponse;
-      } catch (error) {
-        const cache = await caches.open(CACHE_NAME);
-        
-        // Check if the request is for an API endpoint
-        if (event.request.url.includes('/api/')) {
-          // For API requests, return a custom offline response
-          return new Response(
-            JSON.stringify({
-              error: 'offline',
-              message: 'You are currently offline'
-            }),
-            {
-              status: 503,
-              headers: { 'Content-Type': 'application/json' }
-            }
-          );
-        }
-
-        // Try to get the resource from cache
-        const cachedResponse = await cache.match(event.request);
+        // Try cache first
+        const cachedResponse = await caches.match(event.request);
         if (cachedResponse) {
+          console.log('[ServiceWorker] Return from cache:', event.request.url);
           return cachedResponse;
         }
 
-        // If resource not in cache, show offline page
-        return cache.match(OFFLINE_URL);
+        // If not in cache, try network
+        const response = await fetch(event.request);
+        
+        // Cache successful responses
+        if (response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, response.clone());
+        }
+        
+        return response;
+      } catch (error) {
+        console.log('[ServiceWorker] Fetch failed, serving offline page');
+        
+        // If it's a page navigation, show offline page
+        if (event.request.mode === 'navigate') {
+          const cache = await caches.open(CACHE_NAME);
+          return cache.match(OFFLINE_URL);
+        }
+        
+        throw error;
       }
     })()
-  );
-});
-
-// Background sync for failed requests
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-affirmations') {
-    event.waitUntil(syncAffirmations());
-  }
-});
-
-// Handle push notifications
-self.addEventListener('push', event => {
-  const options = {
-    body: event.data.text(),
-    icon: '/assets/Logo.png',
-    badge: '/assets/favicon.svg'
-  };
-
-  event.waitUntil(
-    self.registration.showNotification('deepr.love', options)
   );
 });
