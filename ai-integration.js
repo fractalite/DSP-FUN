@@ -35,7 +35,7 @@ class AIAssistant {
             errors: []
         };
 
-        this.initPromise = this.initWithRetry();
+        this.initPromise = this.init();
     }
 
     log(...args) {
@@ -131,47 +131,15 @@ class AIAssistant {
     }
 
     async init() {
-        if (!ENV.ENABLE_AI) {
-            this.log('AI features are disabled');
-            return null;
+        try {
+            await this.checkConnection();
+            this.initialized = true;
+            this.log('AI Assistant initialized successfully');
+            return true;
+        } catch (error) {
+            this.error('Failed to initialize AI Assistant:', error);
+            return false;
         }
-
-        return this.measureLatency(async () => {
-            try {
-                this.log('Initializing using API:', this.apiUrl);
-                
-                const isConnected = await this.checkConnection();
-                if (!isConnected) {
-                    throw new Error('API endpoint is not reachable');
-                }
-                
-                const response = await fetch(`${this.apiUrl}/config`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Request-ID': crypto.randomUUID()
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to load configuration: ${response.status}\nResponse: ${errorText}`);
-                }
-
-                const config = await response.json();
-                this.initialized = true;
-                this.log('Initialized successfully with config:', config);
-                return config;
-            } catch (error) {
-                this.error('Initialization failed:', {
-                    error: error.message,
-                    stack: error.stack,
-                    apiUrl: this.apiUrl,
-                    timestamp: new Date().toISOString()
-                });
-                throw error;
-            }
-        });
     }
 
     async generateAffirmations(intention) {
