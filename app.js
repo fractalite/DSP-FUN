@@ -1,4 +1,5 @@
-// Wait for DOM to load
+import { audioTracks } from './audio-tracks.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize components
     let audioPlayer = new Audio();

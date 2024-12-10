@@ -1,4 +1,4 @@
-import { AudioOptimizer } from '../js/utils/audioOptimizer.js';
+import AudioOptimizer from '../audioOptimizer.js';
 import fs from 'fs/promises';
 import path from 'path';
 

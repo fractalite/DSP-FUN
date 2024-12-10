@@ -1,39 +1,45 @@
-import { AudioOptimizer } from './js/utils/audioOptimizer.js';
+import AudioOptimizer from './audioOptimizer.js';
 
 class AudioTrackManager {
-    constructor() {
-        this.audioOptimizer = new AudioOptimizer();
+    constructor(audioOptimizer) {
+        this.audioOptimizer = audioOptimizer;
+        this.audioContext = null;
+        this.masterGain = null;
         this.tracks = new Map();
         this.loadingTracks = new Set();
         this.preloadingTracks = new Set();
-        this.masterGain = null;
         this.currentTrack = null;
         this.isFlowMode = false;
         this.playedTracks = new Set();
         
         // Initialize audio context after user interaction
-        this.initPromise = this.initialize();
+        this.initPromise = null;
     }
 
     async initialize() {
+        console.log('AudioTrackManager: Initializing...');
+        await this.audioOptimizer.initialize();
+        this.audioContext = this.audioOptimizer.audioContext;
+
+        if (!this.audioContext) {
+            console.error('AudioTrackManager: audioContext is null. Aborting initialization.');
+            alert('Audio features are unavailable. Please interact with the page to enable audio.');
+            return;
+        }
+
         try {
-            // Wait for AudioOptimizer to be ready
-            await this.audioOptimizer.initialize();
-            
-            // Now we can safely use the audio context
-            this.audioContext = this.audioOptimizer.audioContext;
             this.masterGain = this.audioContext.createGain();
-            this.masterGain.connect(this.audioContext.destination);
-            
-            console.debug('AudioTrackManager: Initialized successfully');
-        } catch (error) {
-            console.error('AudioTrackManager: Failed to initialize:', error);
-            throw error;
+            console.log('Master gain node created successfully:', this.masterGain);
+        } catch (err) {
+            console.error('Error initializing master gain node in AudioTrackManager:', err);
         }
     }
 
     async loadTrack(url, trackId, showLoading = true) {
         // Ensure we're initialized
+        if (!this.initPromise) {
+            throw new Error('AudioTrackManager not initialized');
+        }
         await this.initPromise;
         
         if (this.tracks.has(trackId)) {
@@ -141,6 +147,9 @@ class AudioTrackManager {
 
         try {
             // Ensure we're initialized
+            if (!this.initPromise) {
+                throw new Error('AudioTrackManager not initialized');
+            }
             await this.initPromise;
 
             // Load the track if not already loaded
@@ -207,9 +216,23 @@ class AudioTrackManager {
     }
 }
 
-const audioTrackManager = new AudioTrackManager();
+const audioOptimizer = new AudioOptimizer();
+const audioTrackManager = new AudioTrackManager(audioOptimizer);
 
-window.audioTracks = {
+// Adding user interaction listener for initializing AudioContext
+let audioInitialized = false;
+document.addEventListener('click', async () => {
+    if (audioInitialized) return;
+    audioInitialized = true;
+
+    console.log('[App] User gesture detected. Initializing AudioContext...');
+    await audioOptimizer.initialize();
+    console.log('[AudioOptimizer] Initialized after user interaction.');
+    await audioTrackManager.initialize();
+    console.log('[AudioTrackManager] Initialization complete.');
+});
+
+export const audioTracks = {
     'Dreams II': {
         name: 'Sacred Solfeggio Dreams II',
         versionA: 'audio/tracks/version-a/Sacred Solfeggio Dreams II-2.mp3',
@@ -266,5 +289,7 @@ window.audioTracks = {
         versionB: 'audio/tracks/version-b/Coming Home.mp3'
     }
 };
+
+window.audioTracks = audioTracks;
 
 export default audioTrackManager;

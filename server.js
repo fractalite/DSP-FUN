@@ -21,7 +21,8 @@ app.use(cors({
         'http://localhost:3007',
         'http://localhost:5173',
         'http://localhost:3008',
-        'http://localhost:9999'  // Development server
+        'http://localhost:9999',  // Development server
+        'http://localhost:4000'   // Vite development server
     ],
     credentials: true
 }));

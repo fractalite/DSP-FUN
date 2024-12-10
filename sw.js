@@ -10,12 +10,6 @@ const STATIC_RESOURCES = [
   '/assets/favicon.svg'
 ];
 
-// Font domains to handle
-const FONT_DOMAINS = [
-  'fonts.googleapis.com',
-  'fonts.gstatic.com'
-];
-
 self.addEventListener('install', (event) => {
   console.log('[ServiceWorker] Install');
   event.waitUntil(
@@ -47,53 +41,50 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin) && 
-      !FONT_DOMAINS.some(url => event.request.url.startsWith(url))) {
-    return;
-  }
+    const url = new URL(event.request.url);
 
-  // Network-first strategy for API calls
-  if (event.request.url.includes('/.netlify/functions/')) {
+    // Conditional logging based on environment
+    if (process.env.NODE_ENV === 'development') {
+        console.debug(`[ServiceWorker] Fetch intercepted for: ${url.href}`);
+    }
+
+    // Skip API requests (expected behavior)
+    if (url.pathname.startsWith('/api')) {
+        if (process.env.NODE_ENV === 'development') {
+            console.info(`[ServiceWorker] Skipping cache for API request: ${url.href}`);
+        }
+        return; // Let browser handle API requests directly
+    }
+
     event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
+        (async () => {
+            try {
+                const response = await fetch(event.request);
+                if (process.env.NODE_ENV === 'development') {
+                    console.debug(`[ServiceWorker] Response status for ${url.href}: ${response.status}`);
+                }
+
+                // Check if response is cacheable
+                if (!response || response.status !== 200 || response.type !== 'basic') {
+                    if (process.env.NODE_ENV === 'development') {
+                        console.debug(`[ServiceWorker] Non-cacheable response for: ${url.href}`);
+                    }
+                    return response;
+                }
+
+                const responseToCache = response.clone();
+                const cache = await caches.open(CACHE_NAME);
+                await cache.put(event.request, responseToCache);
+                if (process.env.NODE_ENV === 'development') {
+                    console.debug(`[ServiceWorker] Cached response for: ${url.href}`);
+                }
+
+                return response;
+            } catch (error) {
+                console.error('[ServiceWorker] Fetch failed:', error);
+                const cache = await caches.open(CACHE_NAME);
+                return await cache.match(event.request) || new Response('Offline content unavailable', { status: 503 });
+            }
+        })()
     );
-    return;
-  }
-
-  // Cache-first strategy for static assets and fonts
-  event.respondWith(
-    (async () => {
-      try {
-        // Try cache first
-        const cachedResponse = await caches.match(event.request);
-        if (cachedResponse) {
-          console.log('[ServiceWorker] Return from cache:', event.request.url);
-          return cachedResponse;
-        }
-
-        // If not in cache, try network
-        const response = await fetch(event.request);
-        
-        // Cache successful responses
-        if (response.ok) {
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(event.request, response.clone());
-        }
-        
-        return response;
-      } catch (error) {
-        console.log('[ServiceWorker] Fetch failed, serving offline page');
-        
-        // If it's a page navigation, show offline page
-        if (event.request.mode === 'navigate') {
-          const cache = await caches.open(CACHE_NAME);
-          return cache.match(OFFLINE_URL);
-        }
-        
-        throw error;
-      }
-    })()
-  );
 });

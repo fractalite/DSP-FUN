@@ -67,63 +67,20 @@ class AudioOptimizer {
     }
 
     async initialize() {
-        if (this.initialized) {
-            console.debug('AudioOptimizer: Already initialized');
-            return;
+        console.log('[AudioOptimizer] Initializing...');
+        try {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('[AudioOptimizer] AudioContext created:', this.audioContext);
+            }
+            if (this.audioContext.state === 'suspended') {
+                console.log('[AudioOptimizer] Resuming AudioContext...');
+                await this.audioContext.resume();
+                console.log('[AudioOptimizer] AudioContext resumed:', this.audioContext.state);
+            }
+        } catch (err) {
+            console.error('[AudioOptimizer] Error initializing AudioContext:', err);
         }
-        
-        if (!this.userInteractionReceived) {
-            console.debug('AudioOptimizer: Waiting for user interaction before initialization');
-            return;
-        }
-
-        // Create promise only once
-        if (!this.initializationPromise) {
-            console.debug('AudioOptimizer: Starting initialization');
-            this.initializationPromise = new Promise(async (resolve, reject) => {
-                try {
-                    this.metrics.initAttempts++;
-                    this.metrics.lastInitAttempt = Date.now();
-
-                    if (!this.audioContext) {
-                        console.debug('AudioOptimizer: Creating new AudioContext');
-                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    }
-
-                    // Ensure context is running
-                    if (this.audioContext.state !== 'running') {
-                        console.debug('AudioOptimizer: Resuming AudioContext, current state:', this.audioContext.state);
-                        this.metrics.resumeAttempts++;
-                        await this.audioContext.resume();
-                        
-                        // Double-check the state after resume
-                        if (this.audioContext.state !== 'running') {
-                            throw new Error(`AudioContext failed to enter running state: ${this.audioContext.state}`);
-                        }
-                    }
-
-                    this.initialized = true;
-                    console.debug('AudioOptimizer: Successfully initialized');
-                    resolve();
-                } catch (error) {
-                    console.error('AudioOptimizer: Initialization error:', error);
-                    this.handleError(error);
-                    
-                    // Retry if under max attempts
-                    if (this.retryCount < this.maxRetries) {
-                        this.retryCount++;
-                        const delay = this.retryDelay * Math.pow(2, this.retryCount - 1);
-                        console.debug(`AudioOptimizer: Retrying in ${delay}ms (attempt ${this.retryCount}/${this.maxRetries})`);
-                        setTimeout(() => this.initialize(), delay);
-                    } else {
-                        console.error('AudioOptimizer: Max retry attempts reached');
-                        reject(error); // Reject instead of resolving to indicate failure
-                    }
-                }
-            });
-        }
-
-        return this.initializationPromise;
     }
 
     handleError(error) {
