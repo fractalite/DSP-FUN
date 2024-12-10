@@ -4,7 +4,6 @@ import { rateLimit } from 'express-rate-limit';
 import { GroqService } from '../../server/src/services/groqService.js';
 
 const app = express();
-const router = express.Router();
 const IS_DEV = process.env.NODE_ENV === 'development';
 
 // Request logging middleware
@@ -50,12 +49,12 @@ app.use(apiLimiter);
 const groqService = new GroqService(process.env.GROQ_API_KEY);
 
 // Health check endpoint
-router.get('/health', (req, res) => {
+app.get('/.netlify/functions/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Config endpoint
-router.get('/config', (req, res, next) => {
+app.get('/.netlify/functions/api/config', (req, res, next) => {
   try {
     res.json({
       enableAI: process.env.ENABLE_AI === 'true',
@@ -68,7 +67,7 @@ router.get('/config', (req, res, next) => {
 });
 
 // Affirmations endpoint
-router.post('/generate', async (req, res, next) => {
+app.post('/.netlify/functions/api/generate', async (req, res, next) => {
   try {
     const { prompt } = req.body;
     const affirmation = await groqService.generateAffirmation(prompt);
@@ -77,9 +76,6 @@ router.post('/generate', async (req, res, next) => {
     next(error);
   }
 });
-
-// Mount the router
-app.use('/', router);
 
 // Export the serverless function
 export const handler = serverless(app);
