@@ -11,28 +11,58 @@
     <link rel="stylesheet" href="styles.css">
     <script type="module" src="voice-enhancer.js"></script>
     <script type="module" src="voice-recording.js"></script>
-    <script type="module" src="session-tracker.js"></script>
     <script type="module">
         // Register service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', async () => {
                 try {
+                    // Unregister any existing service workers first
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                        console.log('ServiceWorker unregistered:', registration.scope);
+                    }
+
+                    // Register new service worker
                     const registration = await navigator.serviceWorker.register('/sw.js', {
-                        scope: '/'
+                        scope: '/',
+                        updateViaCache: 'none' // Don't cache the service worker file
                     });
-                    console.log('ServiceWorker registration successful with scope:', registration.scope);
+                    console.log('ServiceWorker registration successful:', {
+                        scope: registration.scope,
+                        scriptURL: registration.active?.scriptURL || registration.installing?.scriptURL
+                    });
+
+                    // Handle updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('ServiceWorker update found:', newWorker?.scriptURL);
+                        
+                        newWorker?.addEventListener('statechange', () => {
+                            console.log('ServiceWorker state changed:', newWorker.state);
+                            if (newWorker.state === 'activated') {
+                                console.log('ServiceWorker successfully activated');
+                            }
+                        });
+                    });
 
                     // Request notification permission
                     if ('Notification' in window) {
-                        Notification.requestPermission();
+                        const permission = await Notification.requestPermission();
+                        console.log('Notification permission:', permission);
                     }
 
                     // Setup offline/online handlers
-                    window.addEventListener('online', () => {
+                    window.addEventListener('online', async () => {
                         console.log('Application is online');
                         document.body.classList.remove('offline');
                         // Trigger background sync
-                        registration.sync.register('sync-affirmations');
+                        try {
+                            await registration.sync.register('sync-affirmations');
+                            console.log('Background sync registered');
+                        } catch (error) {
+                            console.warn('Background sync registration failed:', error);
+                        }
                     });
 
                     window.addEventListener('offline', () => {
@@ -41,16 +71,16 @@
                     });
                 } catch (error) {
                     console.error('ServiceWorker registration failed:', error);
+                    // Add visible error notification for users
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'service-worker-error';
+                    errorDiv.textContent = 'Offline support is currently unavailable. Please refresh the page to try again.';
+                    document.body.insertBefore(errorDiv, document.body.firstChild);
                 }
             });
+        } else {
+            console.warn('ServiceWorker is not supported in this browser');
         }
-
-        // Debug logging
-        console.log('Environment variables set:', {
-            API_KEY_EXISTS: !!window.__GROQ_API_KEY__,
-            MODEL_ID: window.__GROQ_MODEL_ID__,
-            ENABLE_AI: window.__ENABLE_AI__
-        });
     </script>
 </head>
 <body class="dark-mode">
@@ -415,7 +445,6 @@
     <script type="module" src="voice-recording.js"></script>
     <script type="module" src="sessions.js"></script>
     <script type="module" src="therapeutic.js"></script>
-    <script type="module" src="session-tracker.js"></script>
     <script type="module" src="app.js"></script>
 
     <script>
@@ -500,7 +529,8 @@
             document.getElementById('session-status').textContent = 'Session Ended';
         });
     </script>
-    <script type="module" src="ai-integration.js"></script>
-    <script type="module" src="affirmation-system.js"></script>
+    <script type="module" src="voice-recording.js"></script>
+    <script type="module" src="session-tracker.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

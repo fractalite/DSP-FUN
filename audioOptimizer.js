@@ -6,82 +6,98 @@ class AudioOptimizer {
         this.retryCount = 0;
         this.maxRetries = 3;
         this.retryDelay = 1000;
+        this.userInteractionReceived = false;
         
         // Track initialization attempts and errors
         this.metrics = {
             initAttempts: 0,
             lastInitAttempt: null,
             errors: [],
-            resumeAttempts: 0
+            resumeAttempts: 0,
+            userInteractions: 0
         };
 
         // Bind methods
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
+        this.handleUserInteraction = this.handleUserInteraction.bind(this);
+        
+        // Set up event listeners
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
+        this.setupInteractionListeners();
+        
+        // Debug logging
+        console.debug('AudioOptimizer: Constructed and waiting for user interaction');
+    }
+
+    setupInteractionListeners() {
+        const interactionEvents = [
+            'click', 'touchstart', 'keydown', 
+            'mousedown', 'pointerdown', 
+            'play', 'pause', 'volumechange'
+        ];
+
+        interactionEvents.forEach(eventType => {
+            document.addEventListener(eventType, this.handleUserInteraction, { 
+                once: false,  // Keep listener active
+                passive: true 
+            });
+        });
+
+        console.debug('AudioOptimizer: Interaction listeners setup complete');
+    }
+
+    async handleUserInteraction(event) {
+        this.metrics.userInteractions++;
+        
+        if (!this.userInteractionReceived) {
+            console.debug('AudioOptimizer: First user interaction detected', {
+                eventType: event.type,
+                timestamp: new Date().toISOString()
+            });
+
+            this.userInteractionReceived = true;
+            
+            try {
+                await this.initialize();
+            } catch (error) {
+                console.error('AudioOptimizer: Initialization failed after user interaction', error);
+                this.handleError(error);
+            }
+        }
     }
 
     async initialize() {
-        if (this.initialized) return;
-        
-        // Create promise only once
-        if (!this.initializationPromise) {
-            this.initializationPromise = new Promise((resolve) => {
-                const initAudio = async () => {
-                    try {
-                        this.metrics.initAttempts++;
-                        this.metrics.lastInitAttempt = Date.now();
-
-                        if (!this.audioContext) {
-                            this.audioContext = new AudioContext();
-                        }
-
-                        // Ensure context is running
-                        if (this.audioContext.state !== 'running') {
-                            this.metrics.resumeAttempts++;
-                            await this.audioContext.resume();
-                        }
-
-                        this.initialized = true;
-                        this.cleanup();
-                        resolve();
-                    } catch (error) {
-                        this.handleError(error);
-                        
-                        // Retry if under max attempts
-                        if (this.retryCount < this.maxRetries) {
-                            this.retryCount++;
-                            setTimeout(initAudio, this.retryDelay * Math.pow(2, this.retryCount - 1));
-                        } else {
-                            this.cleanup();
-                            resolve(); // Resolve anyway to prevent hanging
-                        }
-                    }
-                };
-
-                // Set up interaction listeners
-                this.setupInteractionListeners(initAudio);
-            });
+        console.log('[AudioOptimizer] Initializing...');
+        try {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('[AudioOptimizer] AudioContext created:', this.audioContext);
+            }
+            if (this.audioContext.state === 'suspended') {
+                console.log('[AudioOptimizer] Resuming AudioContext...');
+                await this.audioContext.resume();
+                console.log('[AudioOptimizer] AudioContext resumed:', this.audioContext.state);
+            }
+        } catch (err) {
+            console.error('[AudioOptimizer] Error initializing AudioContext:', err);
         }
-
-        return this.initializationPromise;
     }
 
-    setupInteractionListeners(initCallback) {
-        const interactions = ['click', 'touchstart', 'keydown'];
-        const handler = (event) => {
-            // Only process if it's a direct user interaction
-            if (event.isTrusted) {
-                initCallback();
-                this.cleanup();
+    handleError(error) {
+        const errorInfo = {
+            timestamp: Date.now(),
+            message: error.message,
+            stack: error.stack,
+            context: {
+                state: this.audioContext?.state,
+                initialized: this.initialized,
+                retryCount: this.retryCount,
+                userInteractionReceived: this.userInteractionReceived
             }
         };
-
-        interactions.forEach(event => {
-            document.addEventListener(event, handler, { once: true });
-        });
-
-        // Store handlers for cleanup
-        this.handlers = interactions.map(event => ({ event, handler }));
+        
+        this.metrics.errors.push(errorInfo);
+        console.error('AudioOptimizer Error:', errorInfo);
     }
 
     cleanup() {
@@ -93,64 +109,33 @@ class AudioOptimizer {
         }
     }
 
-    handleError(error) {
-        this.metrics.errors.push({
-            timestamp: Date.now(),
-            message: error.message,
-            stack: error.stack,
-            retryCount: this.retryCount
-        });
-
-        // Keep only last 10 errors
-        if (this.metrics.errors.length > 10) {
-            this.metrics.errors.shift();
-        }
-
-        console.error('AudioOptimizer Error:', error);
-    }
-
     handleVisibilityChange() {
-        if (this.audioContext && document.visibilityState === 'visible') {
-            this.audioContext.resume().catch(error => {
-                this.handleError(error);
-            });
+        if (!this.audioContext) return;
+        
+        if (document.hidden) {
+            console.debug('AudioOptimizer: Page hidden, suspending AudioContext');
+            this.audioContext.suspend();
+        } else if (this.initialized) {
+            console.debug('AudioOptimizer: Page visible, resuming AudioContext');
+            this.audioContext.resume();
         }
     }
 
-    async suspend() {
-        if (this.audioContext && this.audioContext.state === 'running') {
-            try {
-                await this.audioContext.suspend();
-            } catch (error) {
-                this.handleError(error);
-            }
-        }
+    getAudioContext() {
+        return this.audioContext;
+    }
+
+    isInitialized() {
+        return this.initialized;
     }
 
     getMetrics() {
         return {
+            ...this.metrics,
+            audioContextState: this.audioContext?.state,
             initialized: this.initialized,
-            context: this.audioContext ? {
-                state: this.audioContext.state,
-                sampleRate: this.audioContext.sampleRate,
-                baseLatency: this.audioContext.baseLatency
-            } : null,
-            metrics: {
-                ...this.metrics,
-                retryCount: this.retryCount
-            }
+            retryCount: this.retryCount
         };
-    }
-
-    destroy() {
-        this.cleanup();
-        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
-        
-        if (this.audioContext) {
-            this.audioContext.close().catch(error => {
-                this.handleError(error);
-            });
-        }
     }
 }
 

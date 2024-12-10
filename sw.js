@@ -1,132 +1,90 @@
-const CACHE_NAME = 'deepr-love-v1';
+const CACHE_NAME = 'deepr-love-cache-v1';
 const OFFLINE_URL = '/offline.html';
 
-// Resources to pre-cache
-const PRECACHE_RESOURCES = [
+// Resources to cache
+const STATIC_RESOURCES = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/ai-integration.js',
-  '/affirmation-system.js',
-  '/audio-optimizer.js',
-  '/audio-tracks.js',
+  '/offline.html',
   '/assets/Logo.png',
-  OFFLINE_URL
+  '/assets/favicon.svg'
 ];
 
-// Install event - pre-cache resources
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
+  console.log('[ServiceWorker] Install');
   event.waitUntil(
     (async () => {
+      console.log('[ServiceWorker] Caching app shell');
       const cache = await caches.open(CACHE_NAME);
-      // Pre-cache offline page and essential resources
-      await cache.addAll(PRECACHE_RESOURCES);
-      // Force service worker to become active
-      await self.skipWaiting();
+      await cache.addAll(STATIC_RESOURCES);
+      console.log('[ServiceWorker] Cache populated');
     })()
   );
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
+  console.log('[ServiceWorker] Activate');
   event.waitUntil(
     (async () => {
-      // Enable navigation preload if supported
-      if (self.registration.navigationPreload) {
-        await self.registration.navigationPreload.enable();
-      }
-
-      // Remove old caches
+      // Clean up old caches
       const cacheKeys = await caches.keys();
       await Promise.all(
-        cacheKeys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+        cacheKeys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
       );
-
-      // Take control of all pages immediately
+      
+      console.log('[ServiceWorker] Claiming clients');
       await self.clients.claim();
     })()
   );
 });
 
-// Fetch event - handle offline functionality
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    (async () => {
-      try {
-        // Try to use navigation preload response if available
-        const preloadResponse = await event.preloadResponse;
-        if (preloadResponse) {
-          return preloadResponse;
-        }
+self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
 
-        // Try the network first
-        const networkResponse = await fetch(event.request);
-        
-        // Cache successful GET requests, but skip partial responses
-        if (event.request.method === 'GET' && networkResponse.status === 200) {
-            // Don't cache audio files that might be served partially
-            if (!event.request.url.endsWith('.mp3') && !event.request.url.endsWith('.wav')) {
-                const cache = await caches.open(CACHE_NAME);
-                try {
-                    await cache.put(event.request, networkResponse.clone());
-                } catch (e) {
-                    console.warn('Failed to cache response:', e);
+    // Conditional logging based on environment
+    if (process.env.NODE_ENV === 'development') {
+        console.debug(`[ServiceWorker] Fetch intercepted for: ${url.href}`);
+    }
+
+    // Skip API requests (expected behavior)
+    if (url.pathname.startsWith('/api')) {
+        if (process.env.NODE_ENV === 'development') {
+            console.info(`[ServiceWorker] Skipping cache for API request: ${url.href}`);
+        }
+        return; // Let browser handle API requests directly
+    }
+
+    event.respondWith(
+        (async () => {
+            try {
+                const response = await fetch(event.request);
+                if (process.env.NODE_ENV === 'development') {
+                    console.debug(`[ServiceWorker] Response status for ${url.href}: ${response.status}`);
                 }
+
+                // Check if response is cacheable
+                if (!response || response.status !== 200 || response.type !== 'basic') {
+                    if (process.env.NODE_ENV === 'development') {
+                        console.debug(`[ServiceWorker] Non-cacheable response for: ${url.href}`);
+                    }
+                    return response;
+                }
+
+                const responseToCache = response.clone();
+                const cache = await caches.open(CACHE_NAME);
+                await cache.put(event.request, responseToCache);
+                if (process.env.NODE_ENV === 'development') {
+                    console.debug(`[ServiceWorker] Cached response for: ${url.href}`);
+                }
+
+                return response;
+            } catch (error) {
+                console.error('[ServiceWorker] Fetch failed:', error);
+                const cache = await caches.open(CACHE_NAME);
+                return await cache.match(event.request) || new Response('Offline content unavailable', { status: 503 });
             }
-        }
-        
-        return networkResponse;
-      } catch (error) {
-        const cache = await caches.open(CACHE_NAME);
-        
-        // Check if the request is for an API endpoint
-        if (event.request.url.includes('/api/')) {
-          // For API requests, return a custom offline response
-          return new Response(
-            JSON.stringify({
-              error: 'offline',
-              message: 'You are currently offline'
-            }),
-            {
-              status: 503,
-              headers: { 'Content-Type': 'application/json' }
-            }
-          );
-        }
-
-        // Try to get the resource from cache
-        const cachedResponse = await cache.match(event.request);
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        // If resource not in cache, show offline page
-        return cache.match(OFFLINE_URL);
-      }
-    })()
-  );
-});
-
-// Background sync for failed requests
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-affirmations') {
-    event.waitUntil(syncAffirmations());
-  }
-});
-
-// Handle push notifications
-self.addEventListener('push', event => {
-  const options = {
-    body: event.data.text(),
-    icon: '/assets/Logo.png',
-    badge: '/assets/favicon.svg'
-  };
-
-  event.waitUntil(
-    self.registration.showNotification('deepr.love', options)
-  );
+        })()
+    );
 });

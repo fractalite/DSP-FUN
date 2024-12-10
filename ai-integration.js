@@ -115,14 +115,27 @@ class AIAssistant {
     async checkConnection() {
         return this.measureLatency(async () => {
             try {
-                const response = await fetch(`${this.apiUrl}/health`, {
+                // Use the correct health check endpoint path
+                const healthEndpoint = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? `${this.apiUrl}/health`
+                    : '/.netlify/functions/health';
+                
+                const response = await fetch(healthEndpoint, {
                     method: 'GET',
                     headers: { 
                         'Accept': 'application/json',
                         'X-Request-ID': crypto.randomUUID()
                     }
                 });
-                return response.ok;
+
+                if (!response.ok) {
+                    this.error('Health check failed:', response.status, response.statusText);
+                    return false;
+                }
+
+                const data = await response.json();
+                this.log('Health check response:', data);
+                return true;
             } catch (error) {
                 this.error('Connection check failed:', error);
                 return false;

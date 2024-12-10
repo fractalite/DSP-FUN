@@ -3,6 +3,10 @@ import fetch from 'node-fetch';
 
 const router = express.Router();
 
+router.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 router.get('/config', (req, res) => {
     const config = {
         modelId: process.env.GROQ_MODEL_ID || 'llama-3.3-70b-versatile',

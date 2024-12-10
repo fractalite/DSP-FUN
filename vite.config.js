@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { loadEnv } from 'vite'
+import { resolve } from 'path'
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -16,6 +17,11 @@ export default defineConfig(({ command, mode }) => {
       strictPort: true,
       host: true,
       proxy: {
+        '/api': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, '')
+        },
         '/.netlify/functions': {
           target: 'http://localhost:9999',
           changeOrigin: true,
@@ -26,7 +32,31 @@ export default defineConfig(({ command, mode }) => {
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
-      sourcemap: true
+      sourcemap: true,
+      // Ensure service worker and static files are copied
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+          sw: resolve(__dirname, 'sw.js')
+        },
+        output: {
+          entryFileNames: (chunkInfo) => {
+            return chunkInfo.name === 'sw' ? '[name].js' : 'assets/[name]-[hash].js'
+          }
+        }
+      },
+      // Copy service worker and other static files
+      copyPublicDir: true
+    },
+    // Ensure service worker is copied to build directory
+    publicDir: 'public',
+    experimental: {
+      renderBuiltUrl(filename, { hostType, type }) {
+        if (filename.includes('sw.js')) {
+          return { relative: true, runtime: filename }
+        }
+        return filename
+      }
     }
   }
 })
